@@ -1,0 +1,65 @@
+/**
+ * Blink the default LED on the
+ * <a href="https://www.pololu.com/docs/0J86">Pololu 3pi+ 2040 robot</a>.
+ * @author Abhi Gundrala
+ * @author Edward A. Lee
+ */
+ target C {
+    platform: {
+      name: "rp2040",
+      board: "pololu_3pi_2040_robot"
+    },
+    single-threaded: true
+  }
+  
+  preamble {=
+    #include <stdio.h>
+    #include <pico/stdlib.h>
+    #include <hardware/gpio.h>
+  =}
+  
+  main reactor {
+    preamble{=
+        static uint8_t buf[8];
+        static int bufIndex = 0;
+        static trig = true;
+        static uint8_t ch;
+
+        void test_uart(){
+            while(true){
+                //printf("buad %d, %d,\n", uart_init(uart1, 9600), GPIO_FUNC_UART);
+        
+                uart_putc(uart1, ch);
+                if(uart_is_readable(uart1)){
+                    while(uart_is_readable(uart1)){
+                        if(bufIndex == sizeof(buf)){
+                            bufIndex = 0;
+                        }                        
+                        buf[bufIndex++] = uart_getc(uart1);
+                        printf("Test: %d", buf[0]);
+                    }
+                }
+                if(buf[0] == 'a'){
+                    gpio_put(PICO_DEFAULT_LED_PIN, trig);
+                    trig = !trig;
+                }
+            }
+
+
+        }
+
+        
+    =}
+  
+    reaction(startup) {=
+      gpio_init(PICO_DEFAULT_LED_PIN);
+      gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+      uart_init(uart1, 9600);
+      gpio_set_function(20, GPIO_FUNC_UART);
+      gpio_set_function(21, GPIO_FUNC_UART);
+      
+    
+      test_uart();
+    =}
+  
+  }
