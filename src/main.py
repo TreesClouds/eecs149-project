@@ -1,5 +1,5 @@
-import src.gui as gui
-import src.wireless as wireless
+import gui
+import wireless
 
 gui.movement_callback = wireless.on_press
 

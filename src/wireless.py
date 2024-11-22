@@ -2,6 +2,7 @@ import pygame
 import serial
 
 # Check serial connection
+print('Trying to open serial connection...')
 try:
     bluetooth_serial = serial.Serial('/dev/ttyUSB0', 9600)
     print("Serial connection established.")
