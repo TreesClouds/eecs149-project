@@ -13,6 +13,7 @@ GHOST_COLLISION_MARGIN = 10.0
 FONT_FAMILY = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
 GHOST_SPEED = 3.0 # In px/frame
+PLAYER_SPEED = 5.0
 PLAYER_RADIUS = 20.0
 
 # pygame setup
@@ -40,7 +41,18 @@ while True:
     screen.fill('black')
 
     if state == 'RUNNING':
-        pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            pacman_pos.x -= PLAYER_SPEED
+        elif keys[pygame.K_RIGHT]:
+            pacman_pos.x += PLAYER_SPEED
+        elif keys[pygame.K_UP]:
+            pacman_pos.y -= PLAYER_SPEED
+        elif keys[pygame.K_DOWN]:
+            pacman_pos.y += PLAYER_SPEED
+        pacman_pos.x = pygame.math.clamp(pacman_pos.x, 0, WIDTH)
+        pacman_pos.y = pygame.math.clamp(pacman_pos.y, 0, HEIGHT)
+        # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
         ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
 
     pygame.draw.circle(screen, "yellow", pacman_pos, PLAYER_RADIUS)
