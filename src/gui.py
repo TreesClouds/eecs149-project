@@ -31,10 +31,14 @@ state = 'RUNNING'
 pacman_pos = pygame.math.Vector2(0, 0)
 ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
 
+movement_callback = lambda key: None
+exit_callback = lambda: None
+
 while True:
     # poll for events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            exit_callback()
             exit()
 
     # fill the screen with a color to wipe away anything from last frame
@@ -44,12 +48,16 @@ while True:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             pacman_pos.x -= PLAYER_SPEED
+            movement_callback(pygame.K_LEFT)
         elif keys[pygame.K_RIGHT]:
             pacman_pos.x += PLAYER_SPEED
+            movement_callback(pygame.K_RIGHT)
         elif keys[pygame.K_UP]:
             pacman_pos.y -= PLAYER_SPEED
+            movement_callback(pygame.K_UP)
         elif keys[pygame.K_DOWN]:
             pacman_pos.y += PLAYER_SPEED
+            movement_callback(pygame.K_DOWN)
         pacman_pos.x = pygame.math.clamp(pacman_pos.x, 0, WIDTH)
         pacman_pos.y = pygame.math.clamp(pacman_pos.y, 0, HEIGHT)
         # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
