@@ -19,7 +19,7 @@ def on_press(key):
                 bluetooth_serial.write(b'u')
                 print("Up arrow key sent")
             case pygame.K_DOWN:
-                bluetooth_serial.write(b'b')
+                bluetooth_serial.write(b'd')
                 print("Down arrow key sent")
             case pygame.K_LEFT:
                 bluetooth_serial.write(b'l')
