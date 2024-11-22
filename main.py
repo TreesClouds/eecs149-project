@@ -32,10 +32,9 @@ ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
 
 while True:
     # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            exit()
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill('black')

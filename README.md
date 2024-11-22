@@ -21,5 +21,3 @@ pip install -r requirements.txt
 ```
 python3 main.py
 ```
-
-For now, to exit the game, you must interrupt the process in the terminal.
