@@ -19,5 +19,9 @@ pip3 install -r requirements.txt
 
 ## Running
 ```
+sudo chmod a+rw /dev/ttyUSB0
+```
+
+```
 python3 src/main.py
 ```

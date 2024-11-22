@@ -12,14 +12,17 @@ PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
 FONT_FAMILY = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
-GHOST_SPEED = 3.0 # In px/frame
+GHOST_SPEED = 1.0 # In px/frame
 PLAYER_SPEED = 10.0
 PLAYER_RADIUS = 20.0
+MAX_FRAME_RATE = 60
+PACMAN_START_VEL = (PLAYER_SPEED, 0)
 
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font('./assets/PressStart2P-Regular.ttf', FONT_SIZE)
-SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+clock = pygame.time.Clock()
 
 movement_callback = lambda key: None
 exit_callback = lambda: None
@@ -29,12 +32,24 @@ def start():
     score = 0
     state = 'RUNNING'
     pacman_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+    pacman_vel = PACMAN_START_VEL
     # TODO replace with the ghost pos from pose estimation
     ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
 
     while True:
         # poll for events
         for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                match event.key:
+                    case pygame.K_LEFT:
+                        pacman_vel = (-PLAYER_SPEED, 0)
+                    case pygame.K_RIGHT:
+                        pacman_vel = (PLAYER_SPEED, 0)
+                    case pygame.K_UP:
+                        pacman_vel = (0, -PLAYER_SPEED)
+                    case pygame.K_DOWN:
+                        pacman_vel = (0, PLAYER_SPEED)
+                movement_callback(event.key)
             if event.type == pygame.QUIT:
                 exit_callback()
                 exit()
@@ -43,21 +58,8 @@ def start():
         screen.fill('black')
 
         if state == 'RUNNING':
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                pacman_pos.x -= PLAYER_SPEED
-                movement_callback(pygame.K_LEFT)
-            elif keys[pygame.K_RIGHT]:
-                pacman_pos.x += PLAYER_SPEED
-                movement_callback(pygame.K_RIGHT)
-            elif keys[pygame.K_UP]:
-                pacman_pos.y -= PLAYER_SPEED
-                movement_callback(pygame.K_UP)
-            elif keys[pygame.K_DOWN]:
-                pacman_pos.y += PLAYER_SPEED
-                movement_callback(pygame.K_DOWN)
-            pacman_pos.x = pygame.math.clamp(pacman_pos.x, 0, WIDTH)
-            pacman_pos.y = pygame.math.clamp(pacman_pos.y, 0, HEIGHT)
+            pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, WIDTH)
+            pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, HEIGHT)
             # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
             ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
 
@@ -83,3 +85,5 @@ def start():
 
         # flip() the display to put your work on screen
         pygame.display.flip()
+
+        clock.tick(MAX_FRAME_RATE)
