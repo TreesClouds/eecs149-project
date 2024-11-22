@@ -13,28 +13,25 @@ GHOST_COLLISION_MARGIN = 10.0
 FONT_FAMILY = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
 GHOST_SPEED = 3.0 # In px/frame
-PLAYER_SPEED = 5.0
+PLAYER_SPEED = 10.0
 PLAYER_RADIUS = 20.0
 
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font('./assets/PressStart2P-Regular.ttf', FONT_SIZE)
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
-dt = 0
-
-pellets = INITIAL_PELLETS.copy()
-score = 0
-state = 'RUNNING'
-
-# TODO replace with the ghost pos from pose estimation
-pacman_pos = pygame.math.Vector2(0, 0)
-ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 
 movement_callback = lambda key: None
 exit_callback = lambda: None
 
 def start():
+    pellets = INITIAL_PELLETS.copy()
+    score = 0
+    state = 'RUNNING'
+    pacman_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+    # TODO replace with the ghost pos from pose estimation
+    ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
+
     while True:
         # poll for events
         for event in pygame.event.get():
@@ -86,8 +83,3 @@ def start():
 
         # flip() the display to put your work on screen
         pygame.display.flip()
-
-        # limits FPS to 60
-        # dt is delta time in seconds since last frame, used for framerate-
-        # independent physics.
-        dt = clock.tick(60) / 1000
