@@ -39,6 +39,7 @@ python3 src/main.py
 Use the arrow keys to move Pac-Man.
 
 # Camera Setup Instructions
+- sudo apt-get install cmake
 - Download Source Code zip from: https://github.com/IntelRealSense/librealsense/releases/
 - Extract folder and cd into librealsense
 - mkdir build
