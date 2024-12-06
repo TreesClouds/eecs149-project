@@ -42,7 +42,7 @@ def send_data(command):
 stop_wait_time = 50000000
 
 #time to wait before measuring again
-measure_wait_time = 500
+measure_wait_time = 500000
 last_measure = 0
 
 #initialize gyro variables
@@ -150,9 +150,9 @@ def turn(direction):
 
 
 while True:
-    if time.time_ms() - last_measure >= measure_wait_time:
+    if time.time_us() - last_measure >= measure_wait_time:
         measure_distance()
-        last_measure = time.time_ms()
+        last_measure = time.time_us()
         send_data(f"distance1: {distance1}")
         send_data(f"distance1: {distance2}")
         send_data(f"distance1: {distance3}")
