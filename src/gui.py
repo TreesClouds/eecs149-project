@@ -1,4 +1,5 @@
 import pygame
+from camera import Camera
 
 WIDTH, HEIGHT = 600, 600
 INITIAL_PELLETS = set([
@@ -27,14 +28,19 @@ clock = pygame.time.Clock()
 movement_callback = lambda key: None
 exit_callback = lambda: None
 
+
+
 def start():
+    cam = Camera()
     pellets = INITIAL_PELLETS.copy()
     score = 0
     state = 'RUNNING'
-    pacman_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+    
+    coordinates = cam.get_coordinates()
+    pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
     pacman_vel = PACMAN_START_VEL
-    # TODO replace with the ghost pos from pose estimation
-    ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
+
+    ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
 
     while True:
         # poll for events
@@ -58,10 +64,16 @@ def start():
         screen.fill('black')
 
         if state == 'RUNNING':
-            pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, WIDTH)
-            pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, HEIGHT)
-            # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
-            ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
+            coordinates = cam.get_coordinates()
+            print("REACHED: ", coordinates)
+
+            if coordinates[0] != -1 and coordinates[1] != -1: # If new valid position detected update coordinates
+                pacman_pos.x = coordinates[0]
+                pacman_pos.y = coordinates[1]
+
+            if coordinates[2] != -1 and coordinates[3] != -1:
+                ghost_pos.x = coordinates[2]
+                ghost_pos.y = coordinates[3]
 
         pygame.draw.circle(screen, "yellow", pacman_pos, PLAYER_RADIUS)
         
