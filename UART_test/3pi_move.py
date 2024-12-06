@@ -161,52 +161,52 @@ while True:
         data = uart.read(1).decode()     
         if direction == "right":
             if data == 'r':
-                update_display("forward")
+                send_data("forward")
                 motors.set_speeds(speed, speed)             
             elif data == 'l':
-                update_display("turning 180")
+                send_data("turning 180")
                 direction = "left"
                 turn(change_dir)
             elif data == 'u':
-                update_display("turning left")
+                send_data("turning left")
                 direction = "up"
                 turn(angle_to_turn)
             elif data == 'd':            
-                update_display("turning right")
+                send_data("turning right")
                 direction = "down"
                 turn(-angle_to_turn)
         
         elif direction == "left":
             if data == 'l':
-                update_display("forward")
+                send_data("forward")
                 motors.set_speeds(speed, speed)
             elif data == 'r':
-                update_display("turning 180")
+                send_data("turning 180")
                 direction = "right"
                 turn(change_dir)
             elif data == 'd':
-                update_display("turning right")
+                send_data("turning right")
                 direction = "down"
                 turn(angle_to_turn)
             elif data == 'u':            
-                update_display("turning left")
+                send_data("turning left")
                 direction = "up"
                 turn(-angle_to_turn)
         
         elif direction == "up":
             if data == 'u':
-                update_display("forward")
+                send_data("forward")
                 motors.set_speeds(speed, speed)
             elif data == 'd':
-                update_display("turning 180")
+                send_data("turning 180")
                 direction = "down"
                 turn(change_dir)
             elif data == 'r':
-                update_display("turning right")
+                send_data("turning right")
                 direction = "right"
                 turn(-angle_to_turn)
             elif data == 'l':            
-                update_display("turning left")
+                send_data("turning left")
                 direction = "left"
                 turn(angle_to_turn)
         
@@ -214,15 +214,15 @@ while True:
             if data == 'd':
                 motors.set_speeds(speed, speed)
             elif data == 'u':
-                update_display("turning 180")
+                send_data("turning 180")
                 direction = "up"
                 turn(change_dir)
             elif data == 'l':
-                update_display("turning right")
+                send_data("turning right")
                 direction = "left"
                 turn(-angle_to_turn)
             elif data == 'r':            
-                update_display("turning left")
+                send_data("turning left")
                 direction = "right"
                 turn(angle_to_turn)
 
