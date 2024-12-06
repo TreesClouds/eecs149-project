@@ -37,25 +37,6 @@ display = robot.Display()
 def send_data(command):
     uart.write(command + '\r\n')
 
-def update_display(message):
-    display.fill(0)  # Clear the display
-    display.text(message, 0, 0)
-    # if distance1 is not None:
-    #     display.text(f"S1: {distance1:.1f} cm", 0, 20, 1)
-    # else:
-    #     display.text("S1: Out of range", 0, 20, 1)
-    
-    # if distance2 is not None:
-    #     display.text(f"S2: {distance2:.1f} cm", 0, 40, 1)
-    # else:
-    #     display.text("S2: Out of range", 0, 40, 1)
-    
-    # if distance3 is not None:
-    #     display.text(f"S2: {distance3:.1f} cm", 0, 40, 1)
-    # else:
-    #     display.text("S2: Out of range", 0, 40, 1)
-    display.show()
-
 
 #waiting certain amount of time ensures no stuttering
 stop_wait_time = 50000000
@@ -81,41 +62,41 @@ kd = 4
 
 
 #measure distance
-# def measure_distance():
-#     trigger.low()
-#     sleep_us(2)
-#     trigger.high()
-#     sleep_us(10)
-#     trigger.low()
-#     duration1 = time_pulse_us(ECHO_PIN1, 1, 30000)  # 30ms timeout
-#     if duration1 < 0:
-#         distance1 = None
-#     else:
-#         distance1 = (duration1 * 0.0343) / 2
+def measure_distance():
+    trigger.low()
+    sleep_us(2)
+    trigger.high()
+    sleep_us(10)
+    trigger.low()
+    duration1 = time_pulse_us(ECHO_PIN1, 1, 30000)  # 30ms timeout
+    if duration1 < 0:
+        distance1 = None
+    else:
+        distance1 = (duration1 * 0.0343) / 2
     
-#     trigger.low()
-#     sleep_us(2)
-#     trigger.high()
-#     sleep_us(10)
-#     trigger.low()
-#     duration2 = time_pulse_us(ECHO_PIN2, 1, 30000)  # 30ms timeout
-#     if duration2 < 0:
-#         distance2 = None
-#     else:
-#         distance2 = (duration2 * 0.0343) / 2
+    trigger.low()
+    sleep_us(2)
+    trigger.high()
+    sleep_us(10)
+    trigger.low()
+    duration2 = time_pulse_us(ECHO_PIN2, 1, 30000)  # 30ms timeout
+    if duration2 < 0:
+        distance2 = None
+    else:
+        distance2 = (duration2 * 0.0343) / 2
 
-#     trigger.low()
-#     sleep_us(2)
-#     trigger.high()
-#     sleep_us(10)
-#     trigger.low()
-#     duration3 = time_pulse_us(ECHO_PIN3, 1, 30000)  # 30ms timeout
-#     if duration3 < 0:
-#         distance3 = None
-#     else:
-#         distance3 = (duration3 * 0.0343) / 2
+    trigger.low()
+    sleep_us(2)
+    trigger.high()
+    sleep_us(10)
+    trigger.low()
+    duration3 = time_pulse_us(ECHO_PIN3, 1, 30000)  # 30ms timeout
+    if duration3 < 0:
+        distance3 = None
+    else:
+        distance3 = (duration3 * 0.0343) / 2
 
-#     return None
+    return None
 
 # Turn @param: direction. @values +/-90, 180. @return void
 def turn(direction):
@@ -145,33 +126,37 @@ def turn(direction):
             break
     return None            
 
-def pid(error, p=1, i=0, d=0):
-    global integral, last_error
-    integral = integral + error
-    derivative = error - last_error
-    output = p * error + i * integral + d * derivative
-    last_error = error
-    return output
+# def pid(error, p=1, i=0, d=0):
+#     global integral, last_error
+#     integral = integral + error
+#     derivative = error - last_error
+#     output = p * error + i * integral + d * derivative
+#     last_error = error
+#     return output
 
-# TODO: Add to loop
-# This function assumes the ultrasonic code above is working & looping
-def control_timestep():
-    if distance3 < 10: # If wall in front of robot, stop
-        motors.set_speeds(0, 0)
-    if distance1 and distance2: # If walls on both sides of robot, move straight with PID control
-        error = (distance1 - distance2) / 2
-        correction = pid(error, p=1, i=0, d=0)
-        motors.set_speeds(speed - correction, speed + correction)
-    else: # Otherwise, just move straight
-        motors.set_speeds(speed, speed)
+# # TODO: Add to loop
+# # This function assumes the ultrasonic code above is working & looping
+# def control_timestep():
+#     if distance3 < 10: # If wall in front of robot, stop
+#         motors.set_speeds(0, 0)
+#     if distance1 and distance2: # If walls on both sides of robot, move straight with PID control
+#         error = (distance1 - distance2) / 2
+#         correction = pid(error, p=1, i=0, d=0)
+#         motors.set_speeds(speed - correction, speed + correction)
+#     else: # Otherwise, just move straight
+#         motors.set_speeds(speed, speed)
 
         
 
 
 while True:
-    # if time.time_ms() - last_measure >= measure_wait_time:
-    #     measure_distance()
-    #     last_measure = time.time_ms()
+    if time.time_ms() - last_measure >= measure_wait_time:
+        measure_distance()
+        last_measure = time.time_ms()
+        send_data(f"distance1: {distance1}")
+        send_data(f"distance1: {distance2}")
+        send_data(f"distance1: {distance3}")
+        send_data(f"direction: {direction}")
     if uart.any():
         data = uart.read(1).decode()     
         if direction == "right":
