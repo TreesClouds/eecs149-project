@@ -31,6 +31,18 @@ These should both ship with Python 3.12.4.
 			sudo make install
 
 # Running
+## Board Digitization (only needed if you changed the board)
+Each time you change the physical board, you'll also need to change the digitized board:
+
+1. Open [board.txt](assets/board.txt) in a text editor.
+2. Decide on the number of rows `R` (R ≥ 1) and columns `C` (C ≥ 1).
+3. Change the grid according to our file format. By the end, the file should become a (2R + 1) x (2C + 1) grid of the characters `W` (wall), `V` (vertex), and `␣` (empty cell / absent wall).
+
+TODO make file format table (jt)
+
+All vertices (intersection of two or more walls) are represented by the character `V`. Vertices must **always** be present for alignment.
+
+## Startup
 1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
 2. You may need to give yourself permissions to use the device:
 
@@ -40,5 +52,5 @@ These should both ship with Python 3.12.4.
 
 		python3 src/main.py
 
-# Gameplay Instructions
+## Gameplay
 Use the arrow keys to move Pac-Man.
