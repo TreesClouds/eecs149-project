@@ -37,3 +37,12 @@ python3 src/main.py
 
 # Gameplay Instructions
 Use the arrow keys to move Pac-Man.
+
+# Camera Setup Instructions
+- Download Source Code zip from: https://github.com/IntelRealSense/librealsense/releases/
+- Extract folder and cd into librealsense
+- mkdir build
+- cd build
+- cmake ../ -DFORCE_RSUSB_BACKEND=ON -DBUILD_PYTHON_BINDINGS:bool=true -DPYTHON_EXECUTABLE=/usr/bin/python3 -DCMAKE_BUILD_TYPE=release -DBUILD_EXAMPLES=true -DBUILD_GRAPHICAL_EXAMPLES=true
+- sudo make -j4
+- sudo make install
