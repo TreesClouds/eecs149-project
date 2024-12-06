@@ -19,10 +19,15 @@ These should both ship with Python 3.12.4.
 
 		pip3 install -r requirements.txt
 
-3. Set up the camera packages:
-	1. Download Source Code zip from: https://github.com/IntelRealSense/librealsense/releases/
-	2. Extract folder and cd into librealsense
-	3. Run these commands:
+3. Set up Intel Realsense (for tag detection):
+	1. Install cmake if needed:
+
+			sudo apt-get install cmake
+	2. Download Source Code zip from the [direct download link](https://github.com/IntelRealSense/librealsense/archive/refs/tags/v2.56.3.zip). If the direct link doesn't work, click the first "Source code (zip)" link in the [releases list](https://github.com/IntelRealSense/librealsense/releases/).
+	3. Extract folder in any directory and enter it:
+
+			cd librealsense-2.56.3
+	4. Run these commands:
 
 			mkdir build
 			cd build
