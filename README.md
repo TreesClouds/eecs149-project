@@ -1,11 +1,13 @@
 # Physical Pac-Man
 # Requirements
+Total setup time: ~90 minutes
+
 This package has been tested on the following OS/architecture configurations:
 - **Ubuntu 22.04.5 on amd64/x86_64 (recommended)**
 	- To run Ubuntu on Windows, emulate it in VirtualBox.
 	- To run Ubuntu on macOS (arm64):
 		1. Download the [amd64 boot ISO image](https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso).
-		1. Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM but **don't virtualize with the arm64 image**. Instead, emulate with the amd64 image from step 1.
+		2. Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM but **don't virtualize with the arm64 image**. Instead, emulate with the amd64 image from step 1. Installing the server took ~30 minutes on my laptop, then installing ubuntu-desktop took another ~30 minutes.
 - Ubuntu 22.04.5 on arm64 (worked for Shri's laptop but failed to install some tag detection packages on Jeffrey's laptop)
 	1. Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM and virtualize the VM.
 - M1 MacBook Pro (GUI only)
@@ -51,14 +53,26 @@ TODO make file format table (jt)
 All vertices (intersection of two or more walls) are represented by the character `V`. Vertices must **always** be present for alignment.
 
 ## Startup
+### GUI Only (no connected hardware)
+1. Just run the driver script `main.py`:
+
+		python3 src/main.py
+
+### Integrating Wireless
 1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
 2. You may need to give yourself permissions to use the device:
 
 		sudo chmod a+rw /dev/ttyUSB0
 
-3. Then just run the driver script `main.py`:
+3. Add the `--wireless` or `-w` flag as a command-line argument:
 
-		python3 src/main.py
+		python3 src/main.py -w
+
+### Integrating Camera
+1. Connect the webcam to your computer via USB cable. TODO add more instructions for selecting the device?
+2. Add the `--camera` or `-c` flag as a command-line argument:
+
+		python3 src/main.py -c
 
 ## Gameplay
 Use the arrow keys to move Pac-Man.

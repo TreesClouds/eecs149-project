@@ -1,5 +1,4 @@
 import pygame
-from camera import Camera
 
 WIDTH, HEIGHT = 600, 600
 INITIAL_PELLETS = set([
@@ -13,32 +12,53 @@ PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
 FONT_FAMILY = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
-GHOST_SPEED = 3.0 # In px/frame
-PLAYER_SPEED = 5.0
+GHOST_SPEED = 1.0 # In px/frame
+PLAYER_SPEED = 10.0
 PLAYER_RADIUS = 20.0
+MAX_FRAME_RATE = 60
+PACMAN_START_VEL = (PLAYER_SPEED, 0)
 
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font('./assets/PressStart2P-Regular.ttf', FONT_SIZE)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
-dt = 0
 
-pellets = INITIAL_PELLETS.copy()
-score = 0
-state = 'RUNNING'
-
-# TODO replace with the ghost pos from pose estimation
-pacman_pos = pygame.math.Vector2(0, 0)
-ghost_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
-
+# Settings that can be set in main.py
+use_camera = False
 movement_callback = lambda key: None
 exit_callback = lambda: None
 
 def start():
+    pellets = INITIAL_PELLETS.copy()
+    score = 0
+    state = 'RUNNING'
+    
+    pacman_vel = PACMAN_START_VEL
+    if use_camera:
+        from camera import Camera
+        cam = Camera()
+        coordinates = cam.get_coordinates()
+        pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
+        ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
+    else:
+        pacman_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
+        ghost_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+
     while True:
         # poll for events
         for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                match event.key:
+                    case pygame.K_LEFT:
+                        pacman_vel = (-PLAYER_SPEED, 0)
+                    case pygame.K_RIGHT:
+                        pacman_vel = (PLAYER_SPEED, 0)
+                    case pygame.K_UP:
+                        pacman_vel = (0, -PLAYER_SPEED)
+                    case pygame.K_DOWN:
+                        pacman_vel = (0, PLAYER_SPEED)
+                movement_callback(event.key)
             if event.type == pygame.QUIT:
                 exit_callback()
                 exit()
@@ -47,23 +67,22 @@ def start():
         screen.fill('black')
 
         if state == 'RUNNING':
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                pacman_pos.x -= PLAYER_SPEED
-                movement_callback(pygame.K_LEFT)
-            elif keys[pygame.K_RIGHT]:
-                pacman_pos.x += PLAYER_SPEED
-                movement_callback(pygame.K_RIGHT)
-            elif keys[pygame.K_UP]:
-                pacman_pos.y -= PLAYER_SPEED
-                movement_callback(pygame.K_UP)
-            elif keys[pygame.K_DOWN]:
-                pacman_pos.y += PLAYER_SPEED
-                movement_callback(pygame.K_DOWN)
-            pacman_pos.x = pygame.math.clamp(pacman_pos.x, 0, WIDTH)
-            pacman_pos.y = pygame.math.clamp(pacman_pos.y, 0, HEIGHT)
-            # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
-            ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
+            if use_camera:
+                coordinates = cam.get_coordinates()
+                print("REACHED: ", coordinates)
+
+                if coordinates[0] != -1 and coordinates[1] != -1: # If new valid position detected update coordinates
+                    pacman_pos.x = coordinates[0]
+                    pacman_pos.y = coordinates[1]
+
+                if coordinates[2] != -1 and coordinates[3] != -1:
+                    ghost_pos.x = coordinates[2]
+                    ghost_pos.y = coordinates[3]
+            else:
+                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, WIDTH)
+                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, HEIGHT)
+                # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
+                ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
 
         pygame.draw.circle(screen, "yellow", pacman_pos, PLAYER_RADIUS)
         
@@ -88,7 +107,4 @@ def start():
         # flip() the display to put your work on screen
         pygame.display.flip()
 
-        # limits FPS to 60
-        # dt is delta time in seconds since last frame, used for framerate-
-        # independent physics.
-        dt = clock.tick(60) / 1000
+        clock.tick(MAX_FRAME_RATE)
