@@ -1,11 +1,13 @@
 # Physical Pac-Man
 # Requirements
-This package has been tested on the following systems:
-- **Ubuntu 22.04.5**
-	- To run Ubuntu on Windows, emulate it in VirtualBox
+This package has been tested on the following OS/architecture configurations:
+- **Ubuntu 22.04.5 on amd64/x86_64 (recommended)**
+	- To run Ubuntu on Windows, emulate it in VirtualBox.
 	- To run Ubuntu on macOS (arm64):
-		- Download the [Ubuntu 22.04.5 LTS disk image](https://cdimage.ubuntu.com/releases/22.04.3/release/)
-		- Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM and emulate
+		1. Download the [amd64 boot ISO image](https://releases.ubuntu.com/jammy/ubuntu-22.04.5-live-server-amd64.iso).
+		1. Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM but **don't virtualize with the arm64 image**. Instead, emulate with the amd64 image from step 1.
+- Ubuntu 22.04.5 on arm64 (worked for Shri's laptop but failed to install some tag detection packages on Jeffrey's laptop)
+	1. Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM and virtualize the VM.
 - M1 MacBook Pro (GUI only)
 
 These should both ship with Python 3.12.4.
@@ -14,15 +16,16 @@ These should both ship with Python 3.12.4.
 1. On a new Ubuntu machine, pip needs to be installed first:
 
 		sudo apt install python3-pip
+2. **(arm64 only)** Remove pyrealsense2 from requirements.txt since it requires x86.
+3. Create a virtual environment with Python 3.11 (latest version supported by pyrealsense2) and install all packges with pip:
 
-2. Then you can use pip to install all required packages (besides the tag detection, which must be done in the next step):
+		python3.11 -m venv venv
+		source venv/bin/activate
+		pip install -r requirements.txt
+4. **(arm64 only)** Build Intel Realsense from source (might not work):
+	1. Install these dependencies if needed:
 
-		pip3 install -r requirements.txt
-
-3. Set up Intel Realsense (for tag detection):
-	1. Install cmake if needed:
-
-			sudo apt-get install cmake
+			sudo apt-get install cmake libssl-dev libx11-dev xorg-dev libglu1-mesa-dev libusb-1.0.0-dev libudev-dev libcurl4-openssl-dev
 	2. Download Source Code zip from the [direct download link](https://github.com/IntelRealSense/librealsense/archive/refs/tags/v2.56.3.zip). If the direct link doesn't work, click the first "Source code (zip)" link in the [releases list](https://github.com/IntelRealSense/librealsense/releases/).
 	3. Extract folder in any directory and enter it:
 
