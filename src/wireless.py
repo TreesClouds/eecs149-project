@@ -1,4 +1,4 @@
-import pygame
+# import pygame
 import serial
 
 # Check serial connection
