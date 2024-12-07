@@ -1,6 +1,7 @@
-from machine import UART, Pin
+from machine import UART, Pin, I2C, time_pulse_us
 from pololu_3pi_2040_robot import robot
 import time
+from time import sleep_us, sleep
 
 # Initialize UART for HM-10 communication
 uart = UART(0, baudrate=9600, tx=Pin(28), rx=Pin(29))
@@ -22,27 +23,23 @@ echo2 = Pin(ECHO_PIN2, Pin.IN)
 echo3 = Pin(ECHO_PIN3, Pin.IN)
 
 # Ultrasonic variables
-distance1 = None # Left
-distance2 = None # Right
-distance3 = None # Forward
+distance1 = 'None' # Left
+distance2 = 'None' # Right
+distance3 = 'None' # Forward
 
 # Initialize IMU
 imu = robot.IMU()
 imu.reset()
 imu.enable_default()
 
-# Initialize Pololu display
-display = robot.Display()
 
 def send_data(command):
     uart.write(command + '\r\n')
 
 
-#waiting certain amount of time ensures no stuttering
-stop_wait_time = 50000000
 
 #time to wait before measuring again
-measure_wait_time = 500000
+measure_wait_time = 500
 last_measure = 0
 
 #initialize gyro variables
@@ -68,9 +65,9 @@ def measure_distance():
     trigger.high()
     sleep_us(10)
     trigger.low()
-    duration1 = time_pulse_us(ECHO_PIN1, 1, 30000)  # 30ms timeout
+    duration1 = time_pulse_us(echo1, 1, 30000)  # 30ms timeout
     if duration1 < 0:
-        distance1 = None
+        distance1 = 'None'
     else:
         distance1 = (duration1 * 0.0343) / 2
     
@@ -79,9 +76,9 @@ def measure_distance():
     trigger.high()
     sleep_us(10)
     trigger.low()
-    duration2 = time_pulse_us(ECHO_PIN2, 1, 30000)  # 30ms timeout
+    duration2 = time_pulse_us(echo2, 1, 30000)  # 30ms timeout
     if duration2 < 0:
-        distance2 = None
+        distance2 = 'None'
     else:
         distance2 = (duration2 * 0.0343) / 2
 
@@ -90,9 +87,9 @@ def measure_distance():
     trigger.high()
     sleep_us(10)
     trigger.low()
-    duration3 = time_pulse_us(ECHO_PIN3, 1, 30000)  # 30ms timeout
+    duration3 = time_pulse_us(echo3, 1, 30000)  # 30ms timeout
     if duration3 < 0:
-        distance3 = None
+        distance3 = 'None'
     else:
         distance3 = (duration3 * 0.0343) / 2
 
@@ -150,79 +147,82 @@ def turn(direction):
 
 
 while True:
-    if time.time_us() - last_measure >= measure_wait_time:
+    if ((time.time_ns()/1000000) - last_measure) >= measure_wait_time:
         measure_distance()
-        last_measure = time.time_us()
-        send_data(f"distance1: {distance1}")
-        send_data(f"distance1: {distance2}")
-        send_data(f"distance1: {distance3}")
-        send_data(f"direction: {direction}")
+        last_measure = time.time_ns()/1000000
+        send_data(f'distance1: {distance1}')
+        send_data(f'distance2: {distance2}')
+        send_data(f'distance3: {distance3}')
+        send_data(f'direction: {direction}')
+    if distance1 != 'None':
+        motors.set_speeds(0,0)
     if uart.any():
         data = uart.read(1).decode()     
         if direction == "right":
             if data == 'r':
-                send_data("forward")
+                send_data('forward')
                 motors.set_speeds(speed, speed)             
             elif data == 'l':
-                send_data("turning 180")
+                send_data('turning 180')
                 direction = "left"
                 turn(change_dir)
             elif data == 'u':
-                send_data("turning left")
+                send_data('turning left')
                 direction = "up"
                 turn(angle_to_turn)
             elif data == 'd':            
-                send_data("turning right")
+                send_data('turning right')
                 direction = "down"
                 turn(-angle_to_turn)
         
         elif direction == "left":
             if data == 'l':
-                send_data("forward")
+                send_data('forward')
                 motors.set_speeds(speed, speed)
             elif data == 'r':
-                send_data("turning 180")
+                send_data('turning 180')
                 direction = "right"
                 turn(change_dir)
             elif data == 'd':
-                send_data("turning right")
+                send_data('turning right')
                 direction = "down"
                 turn(angle_to_turn)
             elif data == 'u':            
-                send_data("turning left")
+                send_data('turning left')
                 direction = "up"
                 turn(-angle_to_turn)
         
         elif direction == "up":
             if data == 'u':
-                send_data("forward")
+                send_data('forward')
                 motors.set_speeds(speed, speed)
             elif data == 'd':
-                send_data("turning 180")
+                send_data('turning 180')
                 direction = "down"
                 turn(change_dir)
             elif data == 'r':
-                send_data("turning right")
+                send_data('turning right')
                 direction = "right"
                 turn(-angle_to_turn)
             elif data == 'l':            
-                send_data("turning left")
+                send_data('turning left')
                 direction = "left"
                 turn(angle_to_turn)
         
         elif direction == "down":
             if data == 'd':
+                send_data('forward')
                 motors.set_speeds(speed, speed)
             elif data == 'u':
-                send_data("turning 180")
+                send_data('turning 180')
                 direction = "up"
                 turn(change_dir)
             elif data == 'l':
-                send_data("turning right")
+                send_data('turning right')
                 direction = "left"
                 turn(-angle_to_turn)
             elif data == 'r':            
-                send_data("turning left")
+                send_data('turning left')
                 direction = "right"
                 turn(angle_to_turn)
 
