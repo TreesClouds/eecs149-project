@@ -2,25 +2,22 @@
 # Requirements
 ## OS/Architecture
 This package has been tested on the following OS/architecture configurations:
-- **Ubuntu 22.04.5 (recommended)**: If you don't already have an Ubuntu maching, you'll need to set up a VM, which takes ~90 minutes total.
+- **Ubuntu 22.04.5 (recommended)**: If you don't already have an Ubuntu machine, you'll need to set up a VM, which takes ~90 minutes total.
 	- To run Ubuntu on Windows, emulate it in VirtualBox.
 	- To run Ubuntu on M1/M2 Apple Silicon: Follow [this guide](https://techblog.shippio.io/how-to-run-an-ubuntu-22-04-vm-on-m1-m2-apple-silicon-9554adf4fda1) to download UTM and create the VM. Note that the Boot ISO image link will install the latest Ubuntu version (>=24.04.1) but this should still work (untested). Installing the server took ~30 minutes on Jeffrey's laptop, then installing ubuntu-desktop took another ~30 minutes.
 - M1 MacBook Pro (GUI only)
 
-## Python
-All packages will be run with a virtual environment on Python 3.10 (latest version supported by pyrealsense2 for aarch64), so install python3.10 and python3.10-venv if needed:
+## Python/pip
+All packages will be run with a virtual environment on Python 3.10 (latest version supported by pyrealsense2 for aarch64), so install the relevant packages if needed:
 
-    sudo apt install python3.10 python3.10-venv
+    sudo apt install python3.10 python3.10-venv python3-pip
 
 # Installation
-1. On a new Ubuntu machine, pip needs to be installed first:
+Create a virtual environment with Python 3.10 and install all packages:
 
-	   sudo apt install python3-pip
-2. Create a virtual environment with Python 3.10 and install all packages:
-
-	   python3.10 -m venv venv
-	   source venv/bin/activate
-	   pip install -r requirements.txt
+	python3.10 -m venv venv
+	source venv/bin/activate
+	pip install -r requirements.txt
 
 # Running
 ## Board Digitization (only needed if you changed the board)
