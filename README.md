@@ -8,17 +8,19 @@ This package has been tested on the following OS/architecture configurations:
 - M1 MacBook Pro (GUI only)
 
 ## Python
-Install Python 3.11 if you don't already have it.
+All packages will be run with a virtual environment on Python 3.10 (latest version supported by pyrealsense2 for aarch64), so install python3.10 and python3.10-venv if needed:
+
+    sudo apt install python3.10 python3.10-venv
 
 # Installation
 1. On a new Ubuntu machine, pip needs to be installed first:
 
-		sudo apt install python3-pip
-2. Create a virtual environment with Python 3.11 (latest version supported by pyrealsense2) and install all packges with pip:
+	   sudo apt install python3-pip
+2. Create a virtual environment with Python 3.10 and install all packages:
 
-		python3.11 -m venv venv
-		source venv/bin/activate
-		pip install -r requirements.txt
+	   python3.10 -m venv venv
+	   source venv/bin/activate
+	   pip install -r requirements.txt
 
 # Running
 ## Board Digitization (only needed if you changed the board)
@@ -37,7 +39,7 @@ All vertices (intersection of two or more walls) are represented by the characte
 ## Startup
 To only use the GUI (no integrated hardware), just run the driver script `main.py`:
 
-		python3 src/main.py
+    python3 src/main.py
 
 To integrate additional hardware, add the respective flag(s).
 
@@ -45,16 +47,16 @@ To integrate additional hardware, add the respective flag(s).
 1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
 2. You may need to give yourself permissions to use the device:
 
-		sudo chmod a+rw /dev/ttyUSB0
+       sudo chmod a+rw /dev/ttyUSB0
 3. Add the `--wireless` or `-w` flag as a command-line argument:
 
-		python3 src/main.py -w
+       python3 src/main.py -w
 
 ## Integrating Camera
 1. Connect the webcam to your computer via USB cable. TODO add more instructions for selecting the device?
 2. Add the `--camera` or `-c` flag as a command-line argument:
 
-		python3 src/main.py -c
+       python3 src/main.py -c
 
 ## Gameplay
 Use the arrow keys to move Pac-Man.
