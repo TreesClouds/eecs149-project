@@ -1,6 +1,6 @@
 import pygame
 
-WIDTH, HEIGHT = 600, 600
+WIDTH, HEIGHT = 300, 600
 INITIAL_PELLETS = set([
     (30, 60),
     (120, 50),
@@ -10,8 +10,12 @@ INITIAL_PELLETS = set([
 ])
 PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
-FONT_FAMILY = './assets/PressStart2P-Regular.ttf'
+
+FONT_FAMILY_PATH = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
+
+BOARD_PATH = './assets/board.txt'
+
 GHOST_SPEED = 1.0 # In px/frame
 PLAYER_SPEED = 10.0
 PLAYER_RADIUS = 20.0
@@ -20,8 +24,8 @@ PACMAN_START_VEL = (PLAYER_SPEED, 0)
 
 # pygame setup
 pygame.init()
-FONT = pygame.font.Font('./assets/PressStart2P-Regular.ttf', FONT_SIZE)
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 # Settings that can be set in main.py
