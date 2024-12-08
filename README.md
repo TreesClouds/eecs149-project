@@ -27,11 +27,13 @@ Each time you change the physical board, you'll also need to change the digitize
 2. Decide on the number of rows `R` (R ≥ 1) and columns `C` (C ≥ 1).
 3. Change the grid according to our file format. By the end, the file should become a (2R + 1) x (2C + 1) ASCII grid.
 
-TODO make file format table (jt)
+	| Coordinates (0-indexed, r and c are integers) | Meaning | Character* |
+	|---|---|---|
+	| (2r, 2c) where 0 ≤ r ≤ R and 0 ≤ c ≤ C | Intersection of 2+ wall slots (always filled) | `+` |
+	| (2r + 1, 2c + 1) where 0 ≤ r < R and 0 ≤ c < C | The empty spaces in between wall slots (always empty) | (whitespace) |
+	| All others | Wall slots (can be either filled or empty, except for border walls which must always be filled) | `-` or `\|` |
 
-`W` (wall), `V` (vertex), and `␣` (empty cell / absent wall).
-
-All vertices (intersection of two or more walls) are represented by the character `V`. Vertices must **always** be present for alignment.
+	\* Technically, you can use any non-whitespace character(s) for filled ASCII grid cells. These characters are just recommended for human-readability.
 
 ## Startup
 To only use the GUI (no integrated hardware), just run the driver script `main.py`:
