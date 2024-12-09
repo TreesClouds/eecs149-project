@@ -48,7 +48,7 @@ while True:
             # compute and draw the center (x, y)-coordinates of the aruco marker
             cX = int((topLeft[0] + bottomRight[0]) / 2.0)
             cY = int((topLeft[1] + bottomRight[1]) / 2.0)
-            cv2.circle(color_image, (cX, cY), 4, (0, 0, 255), -1)
+            cv2.circle(color_image, topRight, 4, (0, 0, 255), -1)
 
             # draw the aruco tag ID
             cv2.putText(color_image, str(markerID), (topLeft[0], topLeft[1] - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

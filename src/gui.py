@@ -1,6 +1,17 @@
 import pygame
 
-WIDTH, HEIGHT = 300, 600
+WIDTH, HEIGHT = 600, 300
+
+# Create the dictionary with the center of each grid block
+GRID = {
+    (x, y): (
+        (x * (WIDTH // 8)) + (WIDTH // 16),
+        (y * (HEIGHT // 4)) + (HEIGHT // 8)
+    )
+    for x in range(8)
+    for y in range(4)
+}
+
 INITIAL_PELLETS = set([
     (30, 60),
     (120, 50),
@@ -42,9 +53,11 @@ def start():
     if use_camera:
         from camera import Camera
         cam = Camera()
-        coordinates = cam.get_coordinates()
-        pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
-        ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
+        # coordinates = cam.get_coordinates()
+        # pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
+        # ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
+        pacman_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
+        ghost_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
     else:
         pacman_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
         ghost_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
@@ -73,15 +86,13 @@ def start():
         if state == 'RUNNING':
             if use_camera:
                 coordinates = cam.get_coordinates()
-                print("REACHED: ", coordinates)
 
-                if coordinates[0] != -1 and coordinates[1] != -1: # If new valid position detected update coordinates
-                    pacman_pos.x = coordinates[0]
-                    pacman_pos.y = coordinates[1]
+                if coordinates[0] != -1 and coordinates[1] != -1: # If valid position detected update coordinates
+                    pacman_pos.x, pacman_pos.y = GRID[(coordinates[0], coordinates[1])]                
 
                 if coordinates[2] != -1 and coordinates[3] != -1:
-                    ghost_pos.x = coordinates[2]
-                    ghost_pos.y = coordinates[3]
+                    ghost_pos.x, ghost_pos.y = GRID[(coordinates[2], coordinates[3])]
+                    
             else:
                 pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, WIDTH)
                 pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, HEIGHT)

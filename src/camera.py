@@ -15,6 +15,25 @@ class Camera:
     self.arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
     self.arucoParams = cv2.aruco.DetectorParameters_create()
 
+    self.marker1 = None
+    self.marker2 = None
+
+  def get_gridlocation(self, cX, cY):
+
+    totalX = abs(self.marker2[0] - self.marker1[0])
+    totalY = abs(self.marker2[1] - self.marker1[1])
+
+    scalarX = 1 / 8
+    scalarY = 1 / 4
+
+    locX = ((cX - self.marker2[0]) / totalX)
+    locX = locX // scalarX
+
+    locY = ((cY - self.marker1[1]) / totalY)
+    locY = locY // scalarY
+
+    return int(locX), int(locY)
+
   def get_coordinates(self):
     frame = self.pipe.wait_for_frames() 
     color_frame = frame.get_color_frame()
@@ -34,12 +53,17 @@ class Camera:
     if len(corners) > 0:
 
         ids = ids.flatten()
+        sorted_indices = np.argsort(ids)
+        
 
         # loop over the detected aruco corners
-        for (markerCorner, markerID) in zip(corners, ids):
+        for i in sorted_indices:
+            markerCorner = corners[i]
+            markerID = ids[i]
+            
             # extract the marker corners. Order is: (top-left, top-right, bottom-right, and bottom-left)
-            corners = markerCorner.reshape((4, 2))
-            (topLeft, topRight, bottomRight, bottomLeft) = corners
+            c = markerCorner.reshape((4, 2))
+            (topLeft, topRight, bottomRight, bottomLeft) = c
 
             # int conversions
             topRight = (int(topRight[0]), int(topRight[1]))
@@ -51,11 +75,15 @@ class Camera:
             cX = int((topLeft[0] + bottomRight[0]) / 2.0)
             cY = int((topLeft[1] + bottomRight[1]) / 2.0)
 
-            if markerID == 2:
-              pacmanX = cX
-              pacmanY = cY
+            if markerID == 0:
+              if not self.marker1:
+                self.marker1 = topRight
+            elif markerID == 1:
+              if not self.marker2:
+                self.marker2 = topRight
+            elif markerID == 2:
+              pacmanX, pacmanY = self.get_gridlocation(cX, cY)
             elif markerID == 3:
-              ghostX = cX
-              ghostY = cY
+              ghostX, ghostY = self.get_gridlocation(cX, cY)
     
     return pacmanX, pacmanY, ghostX, ghostY
