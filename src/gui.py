@@ -1,4 +1,5 @@
 import pygame
+import board
 
 # Settings set by main.py from CLI arguments
 # Camera
@@ -10,45 +11,6 @@ exit_callback = lambda: None
 
 # Debug
 enable_debug = False
-
-# Board constants
-WALL_THICKNESS_INCHES = 0.125
-CORRIDOR_DIST_INCHES = 5.78125
-INITIAL_PX_PER_INCH = 20
-
-INITIAL_WALL_THICKNESS = WALL_THICKNESS_INCHES * INITIAL_PX_PER_INCH
-INITIAL_CORRIDOR_DIST = CORRIDOR_DIST_INCHES * INITIAL_PX_PER_INCH
-
-class Cell:
-    def __init__(self, is_filled: bool, rect: tuple[float, float, float, float]):
-        self.is_filled = is_filled
-        self.rect = rect
-    
-    def resize(self, scale_factor: float):
-        self.rect = (
-            self.rect[0] * scale_factor, self.rect[1] * scale_factor,
-            self.rect[2] * scale_factor, self.rect[3] * scale_factor
-        )
-
-BOARD_PATH = './assets/board.txt'
-grid: list[list[Cell]] = []
-board_w, board_h = 0, 0
-with open(BOARD_PATH, 'r') as f:
-    rows = f.readlines()
-    y = 0
-    for r, row in enumerate(rows):
-        new_grid_row = []
-        x = 0
-        h = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[r % 2]
-        board_h += h
-        for c, char in enumerate(row.strip()):
-            w = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[c % 2]
-            if r == 0:
-                board_w += w
-            new_grid_row.append(Cell(char != ' ', (x, y, w, h)))
-            x += w
-        grid.append(new_grid_row)
-        y += h
 
 INITIAL_PELLETS = set([
     (30, 60),
@@ -72,14 +34,14 @@ PACMAN_START_VEL = (PLAYER_SPEED, 0)
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
-screen = pygame.display.set_mode((board_w, board_h), pygame.RESIZABLE)
+screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 def start():
     pellets = INITIAL_PELLETS.copy()
     score = 0
     state = 'RUNNING'
-    global board_w, board_h
+    board_w, board_h = board.INITIAL_BOARD_SIZE
 
     def draw_centered_text(text: str, center: tuple[int, int]):
         text = FONT.render(text, True, 'white')
@@ -90,17 +52,12 @@ def start():
     if use_camera:
         from camera import Camera
         cam = Camera()
-        # coordinates = cam.get_coordinates()
-        # pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
-        # ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
-        pacman_pos = pygame.math.Vector2(board_w / 2, board_h / 2)
-        ghost_pos = pygame.math.Vector2(board_w / 10, board_h / 10)
-    else:
-        pacman_pos = pygame.math.Vector2(board_w / 2, board_h / 2)
-        ghost_pos = pygame.math.Vector2(board_w / 10, board_h / 10)
+
+    pacman_pos = pygame.math.Vector2(board_w / 2, board_h / 2)
+    ghost_pos = pygame.math.Vector2(board_w / 10, board_h / 10)
 
     while True:
-        flat_grid = (cell for row in grid for cell in row)
+        flat_grid = (cell for row in board.grid for cell in row)
 
         # poll for events
         for event in pygame.event.get():
