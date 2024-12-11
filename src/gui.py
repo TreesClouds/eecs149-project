@@ -2,6 +2,7 @@ import pygame
 
 WIDTH, HEIGHT = 600, 300
 
+BOARD_PATH = './assets/board.txt'
 # Create the dictionary with the center of each grid block
 GRID = {
     (x, y): (
@@ -11,21 +12,20 @@ GRID = {
     for x in range(8)
     for y in range(4)
 }
+initial_w, initial_h = 600, 300
 
 INITIAL_PELLETS = set([
     (30, 60),
     (120, 50),
     (80, 170),
-    (240, 350),
-    (270, 530)
+    (350, 240),
+    (530, 270)
 ])
 PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
 
 FONT_FAMILY_PATH = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
-
-BOARD_PATH = './assets/board.txt'
 
 GHOST_SPEED = 1.0 # In px/frame
 PLAYER_SPEED = 10.0
@@ -36,7 +36,7 @@ PACMAN_START_VEL = (PLAYER_SPEED, 0)
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((initial_w, initial_h), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 # Settings that can be set in main.py
@@ -48,6 +48,12 @@ def start():
     pellets = INITIAL_PELLETS.copy()
     score = 0
     state = 'RUNNING'
+    usable_w, usable_h = initial_w, initial_h
+
+    def draw_centered_text(text: str, center: tuple[int, int]):
+        text = FONT.render(text, True, 'white')
+        text_rect = text.get_rect(center=center)
+        screen.blit(text, text_rect)
     
     pacman_vel = PACMAN_START_VEL
     if use_camera:
@@ -56,11 +62,11 @@ def start():
         # coordinates = cam.get_coordinates()
         # pacman_pos = pygame.math.Vector2(coordinates[0], coordinates[1])
         # ghost_pos = pygame.math.Vector2(coordinates[2], coordinates[3])
-        pacman_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
-        ghost_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+        pacman_pos = pygame.math.Vector2(usable_w / 2, usable_h / 2)
+        ghost_pos = pygame.math.Vector2(usable_w / 10, usable_h / 10)
     else:
-        pacman_pos = pygame.math.Vector2(WIDTH / 2, HEIGHT / 2)
-        ghost_pos = pygame.math.Vector2(WIDTH / 10, HEIGHT / 10)
+        pacman_pos = pygame.math.Vector2(usable_w / 2, usable_h / 2)
+        ghost_pos = pygame.math.Vector2(usable_w / 10, usable_h / 10)
 
     while True:
         # poll for events
@@ -79,10 +85,21 @@ def start():
             if event.type == pygame.QUIT:
                 exit_callback()
                 exit()
+            if event.type == pygame.VIDEORESIZE:
+                usable_w, usable_h = event.w, event.h
+                # Adjusts width and height to maximum "usable" values
+                initial_aspect_ratio = initial_w / initial_h
+                new_aspect_ratio = event.w / event.h
+                if new_aspect_ratio > initial_aspect_ratio:
+                    usable_w = event.h * initial_aspect_ratio
+                else:
+                    usable_h = event.w / initial_aspect_ratio
 
-        # fill the screen with a color to wipe away anything from last frame
-        screen.fill('black')
+        screen.fill('black') # Background color
 
+        pygame.draw.rect(screen, 'red', (0, 0, usable_w, usable_h), width=1) # Usable bounding box
+
+        # Updates pacman/ghost coordinates
         if state == 'RUNNING':
             if use_camera:
                 coordinates = cam.get_coordinates()
@@ -94,8 +111,8 @@ def start():
                     ghost_pos.x, ghost_pos.y = GRID[(coordinates[2], coordinates[3])]
                     
             else:
-                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, WIDTH)
-                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, HEIGHT)
+                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, usable_w)
+                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, usable_h)
                 # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
                 ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
 
@@ -115,9 +132,9 @@ def start():
         elif pacman_pos.distance_to(ghost_pos) < PLAYER_RADIUS * 2 + GHOST_COLLISION_MARGIN:
             state = 'YOU LOST'
 
-        screen.blit(FONT.render(f'SCORE: {score}', True, 'white'), (100, 20))
+        draw_centered_text(f'SCORE: {score}', (usable_w / 2, FONT_SIZE))
         if state != 'RUNNING':
-            screen.blit(FONT.render(state, True, 'white'), (WIDTH / 2, HEIGHT / 2))
+            draw_centered_text(state, (usable_w / 2, usable_h / 2))
 
         # flip() the display to put your work on screen
         pygame.display.flip()
