@@ -34,7 +34,6 @@ PACMAN_START_VEL = (PLAYER_SPEED, 0)
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
-screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 def start():
@@ -43,10 +42,13 @@ def start():
     state = 'RUNNING'
     board_w, board_h = board.INITIAL_BOARD_SIZE
 
+    screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
+    unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
+
     def draw_centered_text(text: str, center: tuple[int, int]):
         text = FONT.render(text, True, 'white')
         text_rect = text.get_rect(center=center)
-        screen.blit(text, text_rect)
+        unit_screen.blit(text, text_rect)
     
     pacman_vel = PACMAN_START_VEL
     if use_camera:
@@ -76,22 +78,18 @@ def start():
                 exit_callback()
                 exit()
             if event.type == pygame.VIDEORESIZE:
-                new_board_w, new_board_h = event.w, event.h
+                board_w, board_h = event.w, event.h
                 # Adjusts width and height to maximum "usable" values
-                old_aspect_ratio = board_w / board_h
-                new_aspect_ratio = new_board_w / new_board_h
-                if new_aspect_ratio > old_aspect_ratio:
-                    new_board_w = new_board_h * old_aspect_ratio
+                aspect_ratio = board_w / board_h
+                if aspect_ratio > board.ASPECT_RATIO:
+                    board_w = board_h * board.ASPECT_RATIO
                 else:
-                    new_board_h = new_board_w / old_aspect_ratio
-                for cell in flat_grid:
-                    cell.resize(new_board_w / board_w)
-                board_w, board_h = new_board_w, new_board_h
+                    board_h = board_w / board.ASPECT_RATIO
 
-        screen.fill('black') # Background color
+        unit_screen.fill('black') # Background color
 
         if enable_debug:
-            pygame.draw.rect(screen, 'red', (0, 0, board_w, board_h), width=1) # Usable bounding box
+            pygame.draw.rect(unit_screen, 'red', (0, 0, board_w, board_h), width=1) # Usable bounding box
 
         # Updates pacman/ghost coordinates
         if state == 'RUNNING':
@@ -105,38 +103,39 @@ def start():
                     ghost_pos.x, ghost_pos.y = GRID[(coordinates[2], coordinates[3])]
                     
             else:
-                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board_w)
-                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, board_h)
+                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board.INITIAL_BOARD_W)
+                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, board.INITIAL_BOARD_H)
                 # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
                 ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
         
         for cell in flat_grid:
             if cell.is_filled:
-                pygame.draw.rect(screen, 'blue', cell.rect) # Actual cell
+                pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
             if enable_debug:
-                pygame.draw.rect(screen, 'green', cell.rect, width=1) # Border
+                pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
 
-        pygame.draw.circle(screen, "yellow", pacman_pos, PLAYER_RADIUS)
+        pygame.draw.circle(unit_screen, "yellow", pacman_pos, PLAYER_RADIUS)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
             if pacman_pos.distance_to(pellet) < PELLET_RADIUS + PLAYER_RADIUS:
                 pellets.remove(pellet)
                 score += 1
-            pygame.draw.circle(screen, "yellow", pellet, PELLET_RADIUS)
+            pygame.draw.circle(unit_screen, "yellow", pellet, PELLET_RADIUS)
 
-        pygame.draw.circle(screen, "red", ghost_pos, PLAYER_RADIUS)
+        pygame.draw.circle(unit_screen, "red", ghost_pos, PLAYER_RADIUS)
 
         if len(pellets) == 0:
             state = 'YOU WON!'
         elif pacman_pos.distance_to(ghost_pos) < PLAYER_RADIUS * 2 + GHOST_COLLISION_MARGIN:
             state = 'YOU LOST'
 
-        draw_centered_text(f'SCORE: {score}', (board_w / 2, FONT_SIZE))
+        draw_centered_text(f'SCORE: {score}', (board.INITIAL_BOARD_W / 2, FONT_SIZE))
         if state != 'RUNNING':
-            draw_centered_text(state, (board_w / 2, board_h / 2))
+            draw_centered_text(state, (board.INITIAL_BOARD_W / 2, board.INITIAL_BOARD_H / 2))
 
         # flip() the display to put your work on screen
+        screen.blit(pygame.transform.scale(unit_screen, (board_w, board_h)), (0, 0))
         pygame.display.flip()
 
         clock.tick(MAX_FRAME_RATE)
