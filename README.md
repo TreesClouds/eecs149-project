@@ -47,15 +47,14 @@ To integrate additional hardware, add the respective flag(s).
 2. You may need to give yourself permissions to use the device:
 
        sudo chmod a+rw /dev/ttyUSB0
-3. Add the `--wireless` or `-w` flag as a command-line argument:
-
-       python3 src/main.py -w
+3. Add the `--wireless` or `-w` flag as a CLI argument.
 
 ## Integrating Camera
 1. Connect the webcam to your computer via USB cable. TODO add more instructions for selecting the device?
-2. Add the `--camera` or `-c` flag as a command-line argument:
+2. Add the `--camera` or `-c` flag as a CLI argument.
 
-       python3 src/main.py -c
+## Debug Mode
+1. Add the `--debug` or `-d` flag as a CLI argument.
 
 ## Gameplay
 Use the arrow keys to move Pac-Man.
