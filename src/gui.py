@@ -2,17 +2,38 @@ import pygame
 
 WIDTH, HEIGHT = 600, 300
 
+# Board constants
+WALL_THICKNESS_INCHES = 0.125
+CORRIDOR_DIST_INCHES = 5.78125
+INITIAL_PX_PER_INCH = 24
+
+INITIAL_WALL_THICKNESS = WALL_THICKNESS_INCHES * INITIAL_PX_PER_INCH
+INITIAL_CORRIDOR_DIST = CORRIDOR_DIST_INCHES * INITIAL_PX_PER_INCH
+
+class Cell:
+    def __init__(self, is_filled: bool, rect: tuple[float, float, float, float]):
+        self.is_filled = is_filled
+        self.rect = rect
+
 BOARD_PATH = './assets/board.txt'
-# Create the dictionary with the center of each grid block
-GRID = {
-    (x, y): (
-        (x * (WIDTH // 8)) + (WIDTH // 16),
-        (y * (HEIGHT // 4)) + (HEIGHT // 8)
-    )
-    for x in range(8)
-    for y in range(4)
-}
-initial_w, initial_h = 600, 300
+grid: list[list[Cell]] = []
+initial_w, initial_h = 0, 0
+with open(BOARD_PATH, 'r') as f:
+    rows = f.readlines()
+    y = 0
+    for r, row in enumerate(rows):
+        new_grid_row = []
+        x = 0
+        h = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[r % 2]
+        initial_h += h
+        for c, char in enumerate(row.strip()):
+            w = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[c % 2]
+            if r == 0:
+                initial_w += w
+            new_grid_row.append(Cell(char != ' ', (x, y, w, h)))
+            x += w
+        grid.append(new_grid_row)
+        y += h
 
 INITIAL_PELLETS = set([
     (30, 60),
@@ -115,6 +136,12 @@ def start():
                 pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, usable_h)
                 # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
                 ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
+        
+        for row in grid:
+            for cell in row:
+                if cell.is_filled:
+                    pygame.draw.rect(screen, 'blue', cell.rect) # Actual cell
+                pygame.draw.rect(screen, 'green', cell.rect, width=1) # Border
 
         pygame.draw.circle(screen, "yellow", pacman_pos, PLAYER_RADIUS)
         
