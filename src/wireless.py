@@ -1,5 +1,5 @@
-# import pygame
 import serial
+from cli import args
 
 # Check serial connection
 print('Trying to open serial connection...')
@@ -10,23 +10,13 @@ except Exception as e:
     print(f"Error opening serial port: {e}")
     exit()
 
-def on_press(key):
+def transmit(key):
+    if args.debug:
+        print(f"Attempting to transmit key {key}")
     try:
-        # Debug print for each key press
-        print(f"Key pressed: {key}")
-        match key:
-            case pygame.K_UP:
-                bluetooth_serial.write(b'u')
-                print("Up arrow key sent")
-            case pygame.K_DOWN:
-                bluetooth_serial.write(b'd')
-                print("Down arrow key sent")
-            case pygame.K_LEFT:
-                bluetooth_serial.write(b'l')
-                print("Left arrow key sent")
-            case pygame.K_RIGHT:
-                bluetooth_serial.write(b'r')
-                print("Right arrow key sent")
+        bluetooth_serial.write(key)
+        if args.debug:
+            print(f"Transmitted key {key}")
     except Exception as e:
         print(f"Error: {e}")
 
