@@ -1,5 +1,5 @@
 import pygame
-import 
+import board
 import serial
 
 # Settings set by main.py from CLI arguments
