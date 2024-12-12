@@ -14,7 +14,8 @@ FONT_SIZE = 20
 
 GHOST_SPEED = 1.0 # In px/frame
 PLAYER_SPEED = 10.0
-PLAYER_RADIUS = 20.0
+ROBOT_DIAMETER_INCHES = 3.875
+ROBOT_RADIUS = ROBOT_DIAMETER_INCHES / 2 * board.INITIAL_PX_PER_INCH
 MAX_FRAME_RATE = 60
 PACMAN_START_VEL = (PLAYER_SPEED, 0)
 
@@ -132,20 +133,20 @@ def start():
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
 
-        pygame.draw.circle(unit_screen, "yellow", pacman_pos, PLAYER_RADIUS)
+        pygame.draw.circle(unit_screen, "yellow", pacman_pos, ROBOT_RADIUS)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
-            if pacman_pos.distance_to(pellet) < PELLET_RADIUS + PLAYER_RADIUS:
+            if pacman_pos.distance_to(pellet) < PELLET_RADIUS + ROBOT_RADIUS:
                 pellets.remove(pellet)
                 score += 1
             pygame.draw.circle(unit_screen, "yellow", pellet, PELLET_RADIUS)
 
-        pygame.draw.circle(unit_screen, "red", ghost_pos, PLAYER_RADIUS)
+        pygame.draw.circle(unit_screen, "red", ghost_pos, ROBOT_RADIUS)
 
         if len(pellets) == 0:
             state = 'YOU WON!'
-        elif pacman_pos.distance_to(ghost_pos) < PLAYER_RADIUS * 2 + GHOST_COLLISION_MARGIN:
+        elif pacman_pos.distance_to(ghost_pos) < ROBOT_RADIUS * 2 + GHOST_COLLISION_MARGIN:
             state = 'YOU LOST'
 
         draw_centered_text(f'SCORE: {score}', (board.INITIAL_BOARD_W / 2, FONT_SIZE))
