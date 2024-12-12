@@ -12,13 +12,6 @@ exit_callback = lambda: None
 # Debug
 enable_debug = False
 
-INITIAL_PELLETS = set([
-    (30, 60),
-    (120, 50),
-    (80, 170),
-    (350, 240),
-    (530, 270)
-])
 PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
 
@@ -37,7 +30,7 @@ FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 clock = pygame.time.Clock()
 
 def start():
-    pellets = INITIAL_PELLETS.copy()
+    pellets = list(board.INITIAL_PELLETS.values()).copy()
     score = 0
     state = 'RUNNING'
     board_w, board_h = board.INITIAL_BOARD_SIZE
@@ -97,10 +90,10 @@ def start():
                 coordinates = cam.get_coordinates()
 
                 if coordinates[0] != -1 and coordinates[1] != -1: # If valid position detected update coordinates
-                    pacman_pos.x, pacman_pos.y = GRID[(coordinates[0], coordinates[1])]                
+                    pacman_pos.x, pacman_pos.y = board.INITIAL_PELLETS[(coordinates[0], coordinates[1])]                
 
                 if coordinates[2] != -1 and coordinates[3] != -1:
-                    ghost_pos.x, ghost_pos.y = GRID[(coordinates[2], coordinates[3])]
+                    ghost_pos.x, ghost_pos.y = board.INITIAL_PELLETS[(coordinates[2], coordinates[3])]
                     
             else:
                 pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board.INITIAL_BOARD_W)

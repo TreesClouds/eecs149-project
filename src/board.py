@@ -32,3 +32,18 @@ with open(BOARD_PATH, 'r') as f:
 INITIAL_BOARD_W, INITIAL_BOARD_H = board_w, board_h
 INITIAL_BOARD_SIZE = (INITIAL_BOARD_W, INITIAL_BOARD_H)
 ASPECT_RATIO = INITIAL_BOARD_W / INITIAL_BOARD_H
+
+INITIAL_PELLETS = {}
+rowCount = 0
+for i in range(len(grid)):
+    if i % 2 == 1:
+        colCount = 0
+        for j in range(len(grid[i])):
+            if j % 2 == 1:
+                cell = grid[i][j]
+                pR = cell.rect[0] + (cell.rect[2]/2)
+                pC = cell.rect[1] + (cell.rect[3]/2)
+                INITIAL_PELLETS[(rowCount, colCount)] = (pR, pC)
+                colCount += 1
+                colCount += 1
+        rowCount += 1 
