@@ -43,7 +43,6 @@ for i in range(len(grid)):
                 cell = grid[i][j]
                 pR = cell.rect[0] + (cell.rect[2]/2)
                 pC = cell.rect[1] + (cell.rect[3]/2)
-                INITIAL_PELLETS[(rowCount, colCount)] = (pR, pC)
-                colCount += 1
+                INITIAL_PELLETS[(colCount, rowCount)] = (pR, pC)
                 colCount += 1
         rowCount += 1 

@@ -1,5 +1,6 @@
 import pygame
-import board
+import 
+import serial
 
 # Settings set by main.py from CLI arguments
 # Camera
@@ -8,6 +9,7 @@ use_camera = False
 # Wireless
 movement_callback = lambda key: None
 exit_callback = lambda: None
+bluetooth_serial = serial.Serial('/dev/ttyUSB0', 9600)
 
 # Debug
 enable_debug = False
@@ -85,21 +87,49 @@ def start():
             pygame.draw.rect(unit_screen, 'red', (0, 0, board_w, board_h), width=1) # Usable bounding box
 
         # Updates pacman/ghost coordinates
+        pacman_grid_loc = ()
+        ghost_grid_loc = ()
         if state == 'RUNNING':
             if use_camera:
                 coordinates = cam.get_coordinates()
 
                 if coordinates[0] != -1 and coordinates[1] != -1: # If valid position detected update coordinates
-                    pacman_pos.x, pacman_pos.y = board.INITIAL_PELLETS[(coordinates[0], coordinates[1])]                
+                    pacman_grid_loc = (coordinates[0], coordinates[1])
+                    pacman_pos.x, pacman_pos.y = board.INITIAL_PELLETS[pacman_grid_loc]                
 
                 if coordinates[2] != -1 and coordinates[3] != -1:
-                    ghost_pos.x, ghost_pos.y = board.INITIAL_PELLETS[(coordinates[2], coordinates[3])]
+                    ghost_grid_loc = (coordinates[2], coordinates[3])
+                    ghost_pos.x, ghost_pos.y = board.INITIAL_PELLETS[ghost_grid_loc]
+
+                # Conduct BFS for Ghost's next move
+                directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                direction_names = ['u', 'd', 'l', 'r']
+                
+                queue = [(ghost_grid_loc, [])]
+                visited = set()
+                visited.add(ghost_grid_loc)
+                
+                while queue:
+                    current_pos, path = queue.pop(0)
                     
-            else:
-                pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board.INITIAL_BOARD_W)
-                pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, board.INITIAL_BOARD_H)
-                # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
-                ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
+                    if current_pos == pacman_pos:
+                        print("Direction Sent: ", path[0])
+                        bluetooth_serial.write(path[0])
+                        break
+                    
+                    for i, (dx, dy) in enumerate(directions):
+                        new_pos = (current_pos[0] + dx, current_pos[1] + dy)
+                        if new_pos not in visited:
+                            visited.add(new_pos)
+                            queue.append((new_pos, path + [direction_names[i]]))
+                        
+                else:
+                    pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board.INITIAL_BOARD_W)
+                    pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, board.INITIAL_BOARD_H)
+                    # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
+                    ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
+
+            
         
         for cell in flat_grid:
             if cell.is_filled:
