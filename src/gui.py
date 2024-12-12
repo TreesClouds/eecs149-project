@@ -99,7 +99,6 @@ def start():
                 if args.wireless:
                     # Conduct BFS for Ghost's next move
                     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                    direction_names = ['u', 'd', 'l', 'r']
                     
                     queue = [(ghost_grid_loc, [])]
                     visited = set()
@@ -117,7 +116,7 @@ def start():
                             new_pos = (current_pos[0] + dx, current_pos[1] + dy)
                             if new_pos not in visited:
                                 visited.add(new_pos)
-                                queue.append((new_pos, path + [direction_names[i]]))
+                                queue.append((new_pos, path + [directions[i]]))
                         
             else:
                 pacman_pos.x = pygame.math.clamp(pacman_pos.x + pacman_vel[0], 0, board.INITIAL_BOARD_W)
