@@ -3,12 +3,8 @@ import pygame
 import board
 
 # Wireless
-transmit_direction = lambda key: None
-exit_callback = lambda: None
-
-if args.wireless:
-    import serial
-    bluetooth_serial = serial.Serial('/dev/ttyUSB0', 9600)
+pacman_connection = None
+ghost_connection = None
 
 PELLET_RADIUS = 10.0
 GHOST_COLLISION_MARGIN = 10.0
@@ -64,9 +60,12 @@ def start():
                         pacman_vel = (0, -PLAYER_SPEED)
                     case pygame.K_DOWN:
                         pacman_vel = (0, PLAYER_SPEED)
-                transmit_direction(event.key)
+                if pacman_connection:
+                    pacman_connection.transmit_direction(pacman_vel)
             if event.type == pygame.QUIT:
-                exit_callback()
+                if args.wireless:
+                    pacman_connection.close()
+                    ghost_connection.close()
                 exit()
             if event.type == pygame.VIDEORESIZE:
                 board_w, board_h = event.w, event.h
@@ -111,7 +110,7 @@ def start():
                         
                         if current_pos == pacman_pos:
                             print("Direction Sent: ", path[0])
-                            bluetooth_serial.write(path[0])
+                            ghost_connection.transmit_direction(path[0])
                             break
                         
                         for i, (dx, dy) in enumerate(directions):

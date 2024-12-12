@@ -1,25 +1,41 @@
 import serial
 from cli import args
 
-# Check serial connection
-print('Trying to open serial connection...')
-try:
-    bluetooth_serial = serial.Serial('/dev/ttyUSB0', 9600)
-    print("Serial connection established.")
-except Exception as e:
-    print(f"Error opening serial port: {e}")
-    exit()
+BAUD_RATE = 9600
 
-def transmit(key):
-    if args.debug:
-        print(f"Attempting to transmit key {key}")
-    try:
-        bluetooth_serial.write(key)
+class Connection:
+    # Check serial connection
+    def __init__(self, port: str):
+        self.port = port
+        self.log('Trying to open serial connection...')
+        self.serial = serial.Serial(port, BAUD_RATE)
+        self.log('Serial connection established')
+
+    def log(self, value):
+        print(f'[{self.port}] {value}')
+
+    def transmit_direction(self, direction: tuple[int, int]):
+        if direction[0] < 0:
+            buffer = b'l'
+        elif direction[0] > 0:
+            buffer = b'r'
+        elif direction[1] < 0:
+            buffer = b'u'
+        elif direction[1] > 0:
+            buffer = b'd'
+        else:
+            raise TypeError(f'Invalid direction {direction}')
+
         if args.debug:
-            print(f"Transmitted key {key}")
-    except Exception as e:
-        print(f"Error: {e}")
+            self.log(f'Attempting to transmit byte {buffer}')
+        try:
+            self.serial.write(direction)
+            if args.debug:
+                self.log(f"Transmitted byte {buffer}")
+        except Exception as e:
+            self.log(f"Transmission failed: {e}")
 
-def close():
-    bluetooth_serial.close()
-    print("Exiting...")
+    def close(self):
+        self.log('Disconnecting...')
+        self.serial.close()
+        self.log('Successfully disconnected')

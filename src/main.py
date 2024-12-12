@@ -3,15 +3,11 @@ from cli import args
 # GUI and startup
 import gui
 
-if args.camera:
-    gui.use_camera = True
-
 if args.wireless:
-    import wireless
-    gui.transmit_direction = wireless.transmit_direction
-    gui.exit_callback = wireless.close
-
-if args.debug:
-    gui.enable_debug = True
+    PACMAN_PORT = '/dev/ttyUSB0'
+    GHOST_PORT = '/dev/ttyUSB1'
+    from wireless import Connection
+    gui.pacman_connection = Connection(PACMAN_PORT)
+    gui.pacman_connection = Connection(GHOST_PORT)
 
 gui.start()
