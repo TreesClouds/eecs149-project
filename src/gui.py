@@ -65,6 +65,12 @@ def start():
                         pacman_vel = (0, -PLAYER_SPEED)
                     case pygame.K_DOWN:
                         pacman_vel = (0, PLAYER_SPEED)
+                    case pygame.K_s:
+                        pacman_connection.start_game()
+                        ghost_connection.start_game()
+                    case pygame.K_q:
+                        pacman_connection.quit_game()
+                        ghost_connection.quit_game()
                 if pacman_connection:
                     pacman_connection.transmit_direction(pacman_vel)
             if event.type == pygame.QUIT:

@@ -29,7 +29,29 @@ class Connection:
         if args.debug:
             self.log(f'Attempting to transmit byte {buffer}')
         try:
-            self.serial.write(direction)
+            self.serial.write(buffer)
+            if args.debug:
+                self.log(f"Transmitted byte {buffer}")
+        except Exception as e:
+            self.log(f"Transmission failed: {e}")
+    
+    def start_game(self):
+        buffer = b's'
+        if args.debug:
+            self.log(f'Attempting to transmit byte {buffer}')
+        try:
+            self.serial.write(buffer)
+            if args.debug:
+                self.log(f"Transmitted byte {buffer}")
+        except Exception as e:
+            self.log(f"Transmission failed: {e}")
+
+    def quit_game(self):
+        buffer = b'q'
+        if args.debug:
+            self.log(f'Attempting to transmit byte {buffer}')
+        try:
+            self.serial.write(buffer)
             if args.debug:
                 self.log(f"Transmitted byte {buffer}")
         except Exception as e:
