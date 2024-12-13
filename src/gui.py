@@ -27,8 +27,10 @@ ROBOT_DIAMETER_INCHES = 3.875
 ROBOT_DIAMETER = ROBOT_DIAMETER_INCHES * board.INITIAL_PX_PER_INCH
 ROBOT_RADIUS = ROBOT_DIAMETER / 2
 
+ROBOT_SAFE_DIAMETER = ROBOT_DIAMETER * 1.2
+ROBOT_SAFE_RADIUS = ROBOT_SAFE_DIAMETER / 2
+
 PELLET_RADIUS = 10.0
-ROBOT_SAFE_RADIUS = ROBOT_RADIUS * 1.5
 
 DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -37,12 +39,14 @@ pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 clock = pygame.time.Clock()
 INITIAL_DIR = pygame.Vector2(1, 0)
-ROBOT_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
+ROBOT_SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_SAFE_DIAMETER, ROBOT_SAFE_DIAMETER)
 
 screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
 unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
 
 class Robot:
+    SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
+
     def __init__(self, color, speed):
         self.color = color
         self.pos = pygame.Vector2(0, 0)
@@ -51,13 +55,16 @@ class Robot:
         self.connection = None
     
     @property
-    def rect(self):
-        top_left = self.pos - ROBOT_WIDTH_HEIGHT / 2
-        return pygame.Rect(top_left, ROBOT_WIDTH_HEIGHT)
+    def safe_rect(self):
+        top_left = self.pos - ROBOT_SAFE_WIDTH_HEIGHT / 2
+        return pygame.Rect(top_left, ROBOT_SAFE_WIDTH_HEIGHT)
     
     @property
+    def cell(self):
+        return board.point_to_cell(pygame.Vector2(self.safe_rect.center))
+    @property
     def indices(self):
-        return board.point_to_cell(pygame.Vector2(self.rect.center)).indices
+        return self.cell.indices
 
     @property
     def vel(self):
@@ -69,7 +76,7 @@ class Robot:
     def can_move(self):
         saved_pos = self.pos.copy()
         self.pos += self.vel
-        res = board.check_valid_bounding_box(self.rect)
+        res = board.check_valid_bounding_box(self.safe_rect)
         self.pos = saved_pos
         return res
     
@@ -97,6 +104,7 @@ def start():
         pacman.dir.update(INITIAL_DIR.copy())
         ghost.pos.update(board_w / 8, board_h / 8)
         ghost.dir.update(INITIAL_DIR.copy())
+        board.reset()
     reset_game()
     
     def start_game():
@@ -207,17 +215,14 @@ def start():
                         queue.append((new_indices, path + [DIRECTIONS[i]]))
 
             # Mark all cells on path
-            for cell in board.flat_grid:
-                cell.on_path = False
+            board.reset()
             r, c = ghost.indices
             for i, dir in enumerate(shortest_path):
                 board.grid[r][c].on_path = True
                 c += dir[0]
                 r += dir[1]
-                if i == 0:
-                    # (r, c) are the next indices
-                    recenter_dir = board.grid[r][c].rect.center - ghost.pos
             next_dir = shortest_path[0]
+            recenter_dir = ghost.cell.center_vec - ghost.pos
             ghost.dir.update(next_dir if ghost.can_move else recenter_dir)
             if args.wireless:
                 ghost.connection.transmit_direction(next_dir)

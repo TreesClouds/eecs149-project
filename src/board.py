@@ -18,16 +18,13 @@ class Cell:
         self.indices = indices
         self.rect = pygame.Rect(left, top, width, height)
         self.on_path = False
+        self.center_vec = pygame.Vector2(self.rect.center)
 
     def collidepoint(self, point: pygame.Vector2):
         return self.rect.collidepoint(point)
 
     def colliderect(self, rect: pygame.Vector2):
         return self.rect.colliderect(rect)
-
-    def collision_area(self, rect: pygame.Rect) -> float:
-        collision = rect.clip(self.rect)
-        return collision.w * collision.h
         
 BOARD_PATH = './assets/board.txt'
 grid: list[list[Cell]] = []
@@ -69,7 +66,7 @@ def point_to_cell(point: pygame.Vector2) -> Cell:
         raise IndexError(f'Point ({point}) out of bounds')
     min_dist, nearest_cell = float('inf'), None
     for cell in flat_grid:
-        new_dist = point.distance_to(cell.rect.center)
+        new_dist = cell.center_vec.distance_to(point)
         if new_dist < min_dist:
             min_dist, nearest_cell = new_dist, cell
     return nearest_cell
@@ -82,3 +79,7 @@ def check_valid_bounding_box(rect: pygame.Rect) -> bool:
         if cell.colliderect(rect) and cell.is_filled:
             return False
     return rect.clip((0, 0), INITIAL_BOARD_SIZE) == rect
+
+def reset():
+    for cell in flat_grid:
+        cell.on_path = False
