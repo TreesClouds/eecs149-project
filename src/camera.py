@@ -1,7 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-
+import board
 
 class Camera:
   def __init__(self):
@@ -18,21 +18,18 @@ class Camera:
     self.marker1 = None
     self.marker2 = None
 
-  def get_gridlocation(self, cX, cY):
+  def get_point_pixels(self, cX, cY):
 
     totalX = abs(self.marker2[0] - self.marker1[0])
     totalY = abs(self.marker2[1] - self.marker1[1])
 
-    scalarX = 1 / 8
-    scalarY = 1 / 4
+    fractionX = ((cX - self.marker2[0]) / totalX)
+    pixels_x = fractionX * board.INITIAL_BOARD_W
+    
+    fractionY = ((cY - self.marker1[1]) / totalY)
+    pixels_y = fractionY * board.INITIAL_BOARD_H
 
-    locX = ((cX - self.marker2[0]) / totalX)
-    locX = locX // scalarX
-
-    locY = ((cY - self.marker1[1]) / totalY)
-    locY = locY // scalarY
-
-    return int(locX), int(locY)
+    return pixels_x, pixels_y
 
   def get_coordinates(self):
     frame = self.pipe.wait_for_frames() 
@@ -82,8 +79,8 @@ class Camera:
               if not self.marker2:
                 self.marker2 = topRight
             elif markerID == 2:
-              pacmanX, pacmanY = self.get_gridlocation(cX, cY)
+              pacmanX, pacmanY = self.get_point_pixels(cX, cY)
             elif markerID == 3:
-              ghostX, ghostY = self.get_gridlocation(cX, cY)
-    
+              ghostX, ghostY = self.get_point_pixels(cX, cY)
+
     return pacmanX, pacmanY, ghostX, ghostY

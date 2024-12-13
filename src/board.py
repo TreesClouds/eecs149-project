@@ -11,13 +11,18 @@ class Cell:
     def __init__(
             self,
             is_filled: bool, is_space: bool,
+            indices: tuple[int, int],
             left: float, top: float, width: float, height: float):
         self.is_filled = is_filled
         self.is_space = is_space
+        self.indices = indices
         self.rect = pygame.Rect(left, top, width, height)
 
     def collidepoint(self, point: pygame.Vector2):
         return self.rect.collidepoint(point)
+
+    def colliderect(self, rect: pygame.Rect):
+        return self.rect.colliderect(rect)
         
 BOARD_PATH = './assets/board.txt'
 grid: list[list[Cell]] = []
@@ -37,7 +42,11 @@ with open(BOARD_PATH, 'r') as f:
             w = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[is_big_w]
             if r == 0:
                 board_w += w
-            new_cell = Cell(char != ' ', is_big_h and is_big_w, x, y, w, h)
+            new_cell = Cell(
+                char != ' ', is_big_h and is_big_w,
+                (r, c),
+                x, y, w, h
+            )
             new_grid_row.append(new_cell)
             flat_grid.append(new_cell)
             x += w
@@ -49,8 +58,24 @@ ASPECT_RATIO = INITIAL_BOARD_W / INITIAL_BOARD_H
 
 INITIAL_PELLETS = [cell.rect.center for cell in flat_grid if cell.is_space]
 
-def point_to_cell(point: pygame.Vector2) -> Cell:
+def point_pixels_to_cell(point: pygame.Vector2) -> Cell:
     for cell in flat_grid:
         if cell.collidepoint(point):
             return cell
     raise IndexError(f'Point ({point}) out of bounds')
+
+def bounding_box_to_cell(rect: pygame.Rect) -> Cell:
+    for cell in flat_grid:
+        if cell.colliderect(rect):
+            return cell
+    raise IndexError(f'Bounding box ({rect}) out of bounds')
+
+def check_valid_bounding_box(rect: pygame.Rect) -> bool:
+    for cell in flat_grid:
+        if cell.colliderect(rect) and cell.is_filled:
+            return False
+    return rect.clip((0, 0), INITIAL_BOARD_SIZE) == rect
+
+def point_fraction_to_cell(x_fraction, y_fraction) -> Cell:
+    return point_pixels_to_cell(
+        (x_fraction * INITIAL_BOARD_W, y_fraction * INITIAL_BOARD_H))

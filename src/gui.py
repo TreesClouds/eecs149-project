@@ -10,63 +10,91 @@ class State(Enum):
     LOST = 'GAME OVER'
 
 # Wireless
-pacman_connection = None
-ghost_connection = None
-
-PELLET_RADIUS = 10.0
-GHOST_COLLISION_MARGIN = 10.0
-
 FONT_FAMILY_PATH = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
 
-
-PACMAN_SPEED = 10.0
+# Prefer low speeds but high frame rates for high collision detection precision,
+# which minimizes the risk of clipping through walls
+PACMAN_SPEED = 5.0
 PACMAN_COLOR = 'yellow'
 
 GHOST_SPEED = 1.0 # In px/frame
 GHOST_COLOR = 'red'
 
+MAX_FRAME_RATE = 120
+
 ROBOT_DIAMETER_INCHES = 3.875
-ROBOT_RADIUS = ROBOT_DIAMETER_INCHES / 2 * board.INITIAL_PX_PER_INCH
-MAX_FRAME_RATE = 60
-PACMAN_START_VEL = (PACMAN_SPEED, 0)
+ROBOT_DIAMETER = ROBOT_DIAMETER_INCHES * board.INITIAL_PX_PER_INCH
+ROBOT_RADIUS = ROBOT_DIAMETER / 2
+
+PELLET_RADIUS = 10.0
+ROBOT_SAFE_RADIUS = ROBOT_RADIUS * 1.5
+
+DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 clock = pygame.time.Clock()
+PACMAN_START_VEL = pygame.Vector2(PACMAN_SPEED, 0)
+ROBOT_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
+
+screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
+unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
+
+class Robot:
+    def __init__(self, color):
+        self.color = color
+        self.pos = pygame.Vector2(0, 0)
+        self.vel = pygame.Vector2(0, 0)
+        self.connection = None
+    
+    def move(self):
+        saved_pos = self.pos.copy()
+        self.pos += self.vel
+        if not board.check_valid_bounding_box(self.rect):
+            self.pos = saved_pos
+
+    @property
+    def rect(self):
+        top_left = self.pos - ROBOT_WIDTH_HEIGHT / 2
+        return pygame.Rect(top_left, ROBOT_WIDTH_HEIGHT)
+    
+    @property
+    def indices(self):
+        return board.bounding_box_to_cell(self.rect).indices
+    
+    def draw(self):
+        pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
+        pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
+
+pacman, ghost = Robot(PACMAN_COLOR), Robot(GHOST_COLOR)
 
 def start():
-    global pacman_grid_loc, ghost_grid_loc, pellets, score, state, pacman_vel, pacman_pos, ghost_pos
+    global pellets, score, state, pacman, ghost, screen, unit_screen
     board_w, board_h = board.INITIAL_BOARD_SIZE
-    screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
-    unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
 
     def reset_game():
-        global pacman_grid_loc, ghost_grid_loc, pellets, score, state, pacman_vel, pacman_pos, ghost_pos
-        pacman_grid_loc = (0, 0)
-        ghost_grid_loc = (7, 3)
-        
+        global pellets, score, state, pacman, ghost
         pellets = board.INITIAL_PELLETS.copy()
         score = 0
         state = State.PAUSED
-        
-        pacman_vel = PACMAN_START_VEL
-        pacman_pos = pygame.math.Vector2(board_w / 2, board_h / 8)
-        ghost_pos = pygame.math.Vector2(board_w / 8, board_h / 8)
+        pacman.vel = PACMAN_START_VEL.copy()
+        pacman.pos.update(board_w / 2, board_h / 8)
+        ghost.pos.update(board_w / 8, board_h / 8)
     reset_game()
     
     def start_game():
         global state
         state = State.RUNNING
         if args.wireless:
-            pacman_connection.start_game()
-            ghost_connection.start_game()
+            pacman.connection.start_game()
+            ghost.connection.start_game()
     
     def quit_game():
         if args.wireless:
-            pacman_connection.quit_game()
-            ghost_connection.quit_game()
+            pacman.connection.quit_game()
+            ghost.connection.quit_game()
 
     def win_game():
         global state
@@ -82,7 +110,7 @@ def start():
         text = FONT.render(text, True, 'white')
         text_rect = text.get_rect(center=center)
         unit_screen.blit(text, text_rect)
-    
+
     if args.camera:
         from camera import Camera
         cam = Camera()
@@ -93,13 +121,13 @@ def start():
             if event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_LEFT:
-                        pacman_vel = (-PACMAN_SPEED, 0)
+                        pacman.vel.update(-PACMAN_SPEED, 0)
                     case pygame.K_RIGHT:
-                        pacman_vel = (PACMAN_SPEED, 0)
+                        pacman.vel.update(PACMAN_SPEED, 0)
                     case pygame.K_UP:
-                        pacman_vel = (0, -PACMAN_SPEED)
+                        pacman.vel.update(0, -PACMAN_SPEED)
                     case pygame.K_DOWN:
-                        pacman_vel = (0, PACMAN_SPEED)
+                        pacman.vel.update(0, PACMAN_SPEED)
                     case pygame.K_r:
                         if state != State.PAUSED:
                             reset_game()
@@ -109,12 +137,10 @@ def start():
                     case pygame.K_q:
                         if state == State.RUNNING:
                             lose_game()
-                if pacman_connection:
-                    pacman_connection.transmit_direction(pacman_vel)
+                if pacman.connection:
+                    pacman.connection.transmit_direction(pacman.vel)
             if event.type == pygame.QUIT:
-                if args.wireless:
-                    pacman_connection.close()
-                    ghost_connection.close()
+                quit_game()
                 exit()
             if event.type == pygame.VIDEORESIZE:
                 board_w, board_h = event.w, event.h
@@ -136,68 +162,65 @@ def start():
                 coordinates = cam.get_coordinates()
 
                 if coordinates[0] != -1 and coordinates[1] != -1: # If valid position detected update coordinates
-                    pacman_grid_loc = (coordinates[0], coordinates[1])
-                    pacman_pos.x, pacman_pos.y = board.INITIAL_PELLETS[pacman_grid_loc]                
+                    pacman.pos.update(coordinates[0], coordinates[1])
 
                 if coordinates[2] != -1 and coordinates[3] != -1:
-                    ghost_grid_loc = (coordinates[2], coordinates[3])
-                    ghost_pos.x, ghost_pos.y = board.INITIAL_PELLETS[ghost_grid_loc]
-
-                if args.wireless:
-                    # Conduct BFS for Ghost's next move
-                    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                    
-                    queue = [(ghost_grid_loc, [])]
-                    visited = set()
-                    visited.add(ghost_grid_loc)
-                    print("CURRENT GHOST: ", ghost_grid_loc)
-                    while queue:
-                        current_pos, path = queue.pop(0)
-                        print(current_pos)
-                        print(pacman_grid_loc)
-                        if current_pos == pacman_grid_loc:
-                            print("Direction Sent: ", path[0])
-                            ghost_connection.transmit_direction(path[0])
-                            break
-                        
-                        for i, (dx, dy) in enumerate(directions):
-                            new_pos = (current_pos[0] + dx, current_pos[1] + dy)
-                            if new_pos not in visited:
-                                visited.add(new_pos)
-                                queue.append((new_pos, path + [directions[i]]))
-                        
+                    ghost.pos.update(coordinates[2], coordinates[3])
             else:
-                pacman_pos.x += pacman_vel[0]
-                pacman_pos.y += pacman_vel[1]
-                ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
-        
-        pacman_pos.x = pygame.math.clamp(pacman_pos.x, 0, board.INITIAL_BOARD_W)
-        pacman_pos.y = pygame.math.clamp(pacman_pos.y, 0, board.INITIAL_BOARD_H)
+                pacman.move()
+                ghost.move()
+
+            # Conduct BFS for Ghost's next move
+            shortest_path = [] # from ghost to pacman
+            queue = [(ghost.indices, [])] # (indices, path)
+            visited = set()
+            visited.add(ghost.indices)
+            # print("CURRENT GHOST: ", ghost_grid_loc)
+            while queue:
+                current_indices, path = queue.pop(0)
+                # print(current_pos)
+                # print(pacman_grid_loc)
+                if current_indices == pacman.indices:
+                    shortest_path = path
+                    break
+                
+                for i, (dx, dy) in enumerate(DIRECTIONS):
+                    new_r, new_c = current_indices[0] + dy, current_indices[1] + dx
+                    new_indices = (new_r, new_c)
+                    if (new_indices not in visited and
+                        0 <= new_r < len(board.grid) and 0 < new_c < len(board.grid[0]) and
+                        not board.grid[new_r][new_c].is_filled):
+                        visited.add(new_indices)
+                        queue.append((new_indices, path + [DIRECTIONS[i]]))
+
+            next_dir = shortest_path[0]
+            if args.wireless:
+                ghost.connection.transmit_direction(next_dir)
+            ghost.vel.update(pygame.Vector2(next_dir) * GHOST_SPEED)
 
         for cell in board.flat_grid:
             if cell.is_filled:
                 pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
-            if cell.collidepoint(pacman_pos):
+            if cell.collidepoint(pacman.pos):
                 pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1) # Border
-            if cell.collidepoint(ghost_pos):
+            if cell.collidepoint(ghost.pos):
                 pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1) # Border
-
-        pygame.draw.circle(unit_screen, PACMAN_COLOR, pacman_pos, ROBOT_RADIUS)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
-            if pacman_pos.distance_to(pellet) < PELLET_RADIUS + ROBOT_RADIUS:
+            if pacman.pos.distance_to(pellet) < PELLET_RADIUS + ROBOT_RADIUS:
                 pellets.remove(pellet)
                 score += 1
             pygame.draw.circle(unit_screen, "yellow", pellet, PELLET_RADIUS)
 
-        pygame.draw.circle(unit_screen, GHOST_COLOR, ghost_pos, ROBOT_RADIUS)
+        for robot in (pacman, ghost):
+            robot.draw()
 
         if len(pellets) == 0:
             win_game()
-        if pacman_pos.distance_to(ghost_pos) < ROBOT_RADIUS * 2 + GHOST_COLLISION_MARGIN:
+        if pacman.pos.distance_to(ghost.pos) < 2 * ROBOT_SAFE_RADIUS:
             lose_game()
 
         draw_centered_text(f'SCORE: {score}', (board.INITIAL_BOARD_W / 2, FONT_SIZE))
