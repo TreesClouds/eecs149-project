@@ -34,6 +34,14 @@ PELLET_RADIUS = 10.0
 
 DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
+DIR_TO_LETTER = {
+    (-1,  0): 'l',
+    ( 1,  0): 'r',
+    ( 0, -1): 'u',
+    ( 0,  1): 'd',
+    ( 0,  0): 'i'
+}
+
 # pygame setup
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
@@ -43,6 +51,11 @@ ROBOT_SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_SAFE_DIAMETER, ROBOT_SAFE_DIAMETE
 
 screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
 unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
+
+def draw_centered_text(msg: str, center: tuple[int, int], color='white'):
+    text = FONT.render(msg, True, color)
+    text_rect = text.get_rect(center=center)
+    unit_screen.blit(text, text_rect)
 
 class Robot:
     SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
@@ -62,15 +75,21 @@ class Robot:
     @property
     def cell(self):
         return board.point_to_cell(pygame.Vector2(self.safe_rect.center))
+
     @property
     def indices(self):
         return self.cell.indices
+    
+    @property
+    def letter(self):
+        letter = DIR_TO_LETTER[tuple(self.dir)]
+        if letter == None:
+            raise TypeError(f'Direction {self.dir} is not an orthogonal unit vector or (0, 0)')
+        return letter
 
     @property
     def vel(self):
-        assert self.dir.magnitude() != 0, 'No direction set'
-        self.dir.scale_to_length(self.speed)
-        return self.dir
+        return self.dir * self.speed
 
     @property
     def can_move(self):
@@ -87,6 +106,11 @@ class Robot:
     def draw(self):
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
+        draw_centered_text(self.letter, self.pos, 'black')
+    
+    def transmit(self):
+        if self.connection:
+            self.connection.transmit_letter(self.letter)
 
 pacman = Robot(PACMAN_COLOR, PACMAN_SPEED)
 ghost = Robot(GHOST_COLOR, GHOST_SPEED)
@@ -129,11 +153,6 @@ def start():
         state = State.LOST
         quit_game()
 
-    def draw_centered_text(text: str, center: tuple[int, int]):
-        text = FONT.render(text, True, 'white')
-        text_rect = text.get_rect(center=center)
-        unit_screen.blit(text, text_rect)
-
     if args.camera:
         from camera import Camera
         cam = Camera()
@@ -161,7 +180,7 @@ def start():
                         if state == State.RUNNING:
                             lose_game()
                 if pacman.connection:
-                    pacman.connection.transmit_direction(pacman.dir)
+                    pacman.transmit()
             if event.type == pygame.QUIT:
                 quit_game()
                 exit()
@@ -198,11 +217,8 @@ def start():
             queue = [(ghost.indices, [])] # (indices, path)
             visited = set()
             visited.add(ghost.indices)
-            # print("CURRENT GHOST: ", ghost_grid_loc)
             while queue:
                 current_indices, path = queue.pop(0)
-                # print(current_pos)
-                # print(pacman_grid_loc)
                 if current_indices == pacman.indices:
                     shortest_path = path
                     break
@@ -221,11 +237,17 @@ def start():
                 board.grid[r][c].on_path = True
                 c += dir[0]
                 r += dir[1]
-            next_dir = shortest_path[0]
-            recenter_dir = ghost.cell.center_vec - ghost.pos
-            ghost.dir.update(next_dir if ghost.can_move else recenter_dir)
-            if args.wireless:
-                ghost.connection.transmit_direction(next_dir)
+            ghost.dir.update(shortest_path[0])
+            # If the ghost can't move, it's stuck on a corner.
+            # So move orthogonal to the desired BFS direction (still 2 directions)
+            # Which direction? The one that points closer to the center of the current cell.
+            if not ghost.can_move:
+                recenter_dir = ghost.cell.center_vec - ghost.pos
+                if ghost.dir.x != 0:
+                    ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
+                else:
+                    ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
+            ghost.transmit()
 
         for cell in board.flat_grid:
             if cell.is_filled:
