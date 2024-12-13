@@ -59,7 +59,16 @@ INITIAL_BOARD_SIZE = (INITIAL_BOARD_W, INITIAL_BOARD_H)
 BOUNDING_BOX = pygame.Rect((0, 0), INITIAL_BOARD_SIZE)
 ASPECT_RATIO = INITIAL_BOARD_W / INITIAL_BOARD_H
 
-INITIAL_PELLETS = [cell.rect.center for cell in flat_grid if cell.is_space]
+PACMAN_INITIAL_INDICES = (1, 1) # top-left space cell
+PACMAN_INITIAL_POS = grid[1][1].center_vec
+
+GHOST_INITIAL_POS = grid[-2][-2].center_vec
+GHOST_INITIAL_INDICES = (len(grid) - 2, len(grid[0]) - 2) # bottom-right space cell
+
+INITIAL_PELLETS = [
+    cell.center_vec for cell in flat_grid
+    if cell.is_space and cell.center_vec not in (PACMAN_INITIAL_POS, GHOST_INITIAL_POS)
+]
 
 def point_to_cell(point: pygame.Vector2) -> Cell:
     if not BOUNDING_BOX.collidepoint(point):

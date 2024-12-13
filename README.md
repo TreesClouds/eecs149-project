@@ -27,11 +27,11 @@ Each time you change the physical board, you'll also need to change the digitize
 2. Decide on the number of rows `R` (R ≥ 1) and columns `C` (C ≥ 1).
 3. Change the grid according to our file format. By the end, the file should become a (2R + 1) x (2C + 1) ASCII grid.
 
-	| Coordinates (0-indexed, r and c are integers) | Meaning | Character* |
-	|---|---|---|
-	| (2r, 2c) where 0 ≤ r ≤ R and 0 ≤ c ≤ C | Intersection of 2+ wall slots (always filled) | `+` |
-	| (2r + 1, 2c + 1) where 0 ≤ r < R and 0 ≤ c < C | The empty spaces in between wall slots (always empty) | (whitespace) |
-	| All others | Wall slots (can be either filled or empty, except for border walls which must always be filled) | `-` or `\|` |
+	| Cell Type | Coordinates (0-indexed, r and c are integers) | Description | Character* |
+	|---|---|---|---|
+	| Corner | (2r, 2c) where 0 ≤ r ≤ R and 0 ≤ c ≤ C | Intersection of 2+ wall slots (always filled) | `+` |
+	| Space | (2r + 1, 2c + 1) where 0 ≤ r < R and 0 ≤ c < C | The empty spaces in between wall slots (always empty) | (whitespace) |
+	| Wall | All others | Slots corresponding to our modular walls. Can be either filled or empty, except for border walls which must always be filled. | `-` or `\|` |
 
 	\* Technically, you can use any non-whitespace character(s) for filled ASCII grid cells. These characters are just recommended for human-readability.
 
@@ -52,6 +52,10 @@ To integrate additional hardware, add the respective flag(s).
 ## Integrating Camera
 1. Connect the webcam to your computer via USB cable. TODO add more instructions for selecting the device?
 2. Add the `--camera` or `-c` flag as a CLI argument.
+
+## Integrating Projector
+1. Connect a Pico LED projector to your computer via USB cable.
+2. When running the GUI, it's highly recommended to go fullscreen to maximize the projector size.
 
 ## Debug Mode
 1. Add the `--debug` or `-d` flag as a CLI argument.

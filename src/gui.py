@@ -3,24 +3,31 @@ import pygame
 import board
 from enum import Enum
 
+pygame.init()
+
 class State(Enum):
     PAUSED = 'PAUSED'
     RUNNING = 'RUNNING'
     WON = 'YOU WON!'
     LOST = 'GAME OVER'
 
-# Wireless
 FONT_FAMILY_PATH = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
+FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 
 # Prefer low speeds but high frame rates for high collision detection precision,
 # which minimizes the risk of clipping through walls
+PACMAN_INITIAL_POS = board.grid[1][1].center_vec # top-left empty cell
 PACMAN_SPEED = 1
 PACMAN_COLOR = 'yellow'
 
+GHOST_INITIAL_POS = board.grid[-2][-2].center_vec # bottom-right empty cell
 GHOST_SPEED = 0.9 # In px/frame
 GHOST_COLOR = 'red'
 
+INITIAL_DIR = pygame.Vector2(1, 0)
+
+clock = pygame.time.Clock()
 MAX_FRAME_RATE = 120
 
 ROBOT_DIAMETER_INCHES = 3.875
@@ -29,6 +36,7 @@ ROBOT_RADIUS = ROBOT_DIAMETER / 2
 
 ROBOT_SAFE_DIAMETER = ROBOT_DIAMETER * 1.2
 ROBOT_SAFE_RADIUS = ROBOT_SAFE_DIAMETER / 2
+ROBOT_SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_SAFE_DIAMETER, ROBOT_SAFE_DIAMETER)
 
 PELLET_RADIUS = 10.0
 
@@ -42,13 +50,6 @@ DIR_TO_LETTER = {
     ( 0,  0): 'i'
 }
 
-# pygame setup
-pygame.init()
-FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
-clock = pygame.time.Clock()
-INITIAL_DIR = pygame.Vector2(1, 0)
-ROBOT_SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_SAFE_DIAMETER, ROBOT_SAFE_DIAMETER)
-
 screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
 unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
 
@@ -60,12 +61,16 @@ def draw_centered_text(msg: str, center: tuple[int, int], color='white'):
 class Robot:
     SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
 
-    def __init__(self, color, speed):
-        self.color = color
-        self.pos = pygame.Vector2(0, 0)
+    def __init__(self, initial_pos, speed, color):
+        self.initial_pos = initial_pos
         self.speed = speed
-        self.dir = INITIAL_DIR.copy()
+        self.color = color
+        self.reset()
         self.connection = None
+    
+    def reset(self):
+        self.pos = self.initial_pos
+        self.dir = INITIAL_DIR.copy()
     
     @property
     def safe_rect(self):
@@ -112,8 +117,8 @@ class Robot:
         if self.connection:
             self.connection.transmit_letter(self.letter)
 
-pacman = Robot(PACMAN_COLOR, PACMAN_SPEED)
-ghost = Robot(GHOST_COLOR, GHOST_SPEED)
+pacman = Robot(board.grid[1][1].center_vec, PACMAN_SPEED, PACMAN_COLOR)
+ghost = Robot(board.grid[-2][-2].center_vec, GHOST_SPEED, GHOST_COLOR)
 
 def start():
     global pellets, score, state, pacman, ghost, screen, unit_screen
@@ -124,10 +129,8 @@ def start():
         pellets = board.INITIAL_PELLETS.copy()
         score = 0
         state = State.PAUSED
-        pacman.pos.update(board_w / 2, board_h / 8)
-        pacman.dir.update(INITIAL_DIR.copy())
-        ghost.pos.update(board_w / 8, board_h / 8)
-        ghost.dir.update(INITIAL_DIR.copy())
+        pacman.reset()
+        ghost.reset()
         board.reset()
     reset_game()
     
@@ -161,26 +164,25 @@ def start():
         # poll for events
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                match event.key:
-                    case pygame.K_LEFT:
-                        pacman.dir.update(-1, 0)
-                    case pygame.K_RIGHT:
-                        pacman.dir.update(1, 0)
-                    case pygame.K_UP:
-                        pacman.dir.update(0, -1)
-                    case pygame.K_DOWN:
-                        pacman.dir.update(0, 1)
-                    case pygame.K_r:
-                        if state != State.PAUSED:
-                            reset_game()
-                    case pygame.K_s:
-                        if state == State.PAUSED:
-                            start_game()
-                    case pygame.K_q:
-                        if state == State.RUNNING:
-                            lose_game()
-                if pacman.connection:
-                    pacman.transmit()
+                if state == State.PAUSED:
+                    if event.key == pygame.K_s:
+                        start_game()
+                else:
+                    if state == State.RUNNING:
+                        match event.key:
+                            case pygame.K_LEFT:
+                                pacman.dir.update(-1, 0)
+                            case pygame.K_RIGHT:
+                                pacman.dir.update(1, 0)
+                            case pygame.K_UP:
+                                pacman.dir.update(0, -1)
+                            case pygame.K_DOWN:
+                                pacman.dir.update(0, 1)
+                            case pygame.K_q:
+                                lose_game()
+                        pacman.transmit()
+                    if event.key == pygame.K_r:
+                        reset_game()
             if event.type == pygame.QUIT:
                 quit_game()
                 exit()
@@ -254,10 +256,11 @@ def start():
                 pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
-            if cell.indices == pacman.indices:
-                pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1)
-            if cell.on_path:
-                pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1)
+            if state == State.RUNNING:
+                if cell.indices == pacman.indices:
+                    pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1)
+                if cell.on_path:
+                    pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
