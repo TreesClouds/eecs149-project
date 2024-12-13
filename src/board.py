@@ -17,6 +17,7 @@ class Cell:
         self.is_space = is_space
         self.indices = indices
         self.rect = pygame.Rect(left, top, width, height)
+        self.on_path = False
 
     def collidepoint(self, point: pygame.Vector2):
         return self.rect.collidepoint(point)

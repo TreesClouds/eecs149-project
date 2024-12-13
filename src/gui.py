@@ -184,8 +184,8 @@ def start():
                     shortest_path = path
                     break
                 
-                for i, (dx, dy) in enumerate(DIRECTIONS):
-                    new_r, new_c = current_indices[0] + dy, current_indices[1] + dx
+                for i, (dc, dr) in enumerate(DIRECTIONS):
+                    new_r, new_c = current_indices[0] + dr, current_indices[1] + dc
                     new_indices = (new_r, new_c)
                     if (new_indices not in visited and
                         0 <= new_r < len(board.grid) and 0 < new_c < len(board.grid[0]) and
@@ -193,6 +193,14 @@ def start():
                         visited.add(new_indices)
                         queue.append((new_indices, path + [DIRECTIONS[i]]))
 
+            # Mark all cells on path
+            for cell in board.flat_grid:
+                cell.on_path = False
+            r, c = ghost.indices
+            for dir in shortest_path:
+                board.grid[r][c].on_path = True
+                c += dir[0]
+                r += dir[1]
             next_dir = shortest_path[0]
             if args.wireless:
                 ghost.connection.transmit_direction(next_dir)
@@ -203,10 +211,10 @@ def start():
                 pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
-            if cell.collidepoint(pacman.pos):
-                pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1) # Border
-            if cell.collidepoint(ghost.pos):
-                pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1) # Border
+            if cell.indices == pacman.indices:
+                pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1)
+            if cell.on_path:
+                pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
