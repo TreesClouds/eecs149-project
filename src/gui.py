@@ -12,12 +12,17 @@ GHOST_COLLISION_MARGIN = 10.0
 FONT_FAMILY_PATH = './assets/PressStart2P-Regular.ttf'
 FONT_SIZE = 20
 
+
+PACMAN_SPEED = 10.0
+PACMAN_COLOR = 'yellow'
+
 GHOST_SPEED = 1.0 # In px/frame
-PLAYER_SPEED = 10.0
+GHOST_COLOR = 'red'
+
 ROBOT_DIAMETER_INCHES = 3.875
 ROBOT_RADIUS = ROBOT_DIAMETER_INCHES / 2 * board.INITIAL_PX_PER_INCH
 MAX_FRAME_RATE = 60
-PACMAN_START_VEL = (PLAYER_SPEED, 0)
+PACMAN_START_VEL = (PACMAN_SPEED, 0)
 
 # pygame setup
 pygame.init()
@@ -47,20 +52,18 @@ def start():
     ghost_pos = pygame.math.Vector2(board_w / 10, board_h / 10)
 
     while True:
-        flat_grid = (cell for row in board.grid for cell in row)
-
         # poll for events
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_LEFT:
-                        pacman_vel = (-PLAYER_SPEED, 0)
+                        pacman_vel = (-PACMAN_SPEED, 0)
                     case pygame.K_RIGHT:
-                        pacman_vel = (PLAYER_SPEED, 0)
+                        pacman_vel = (PACMAN_SPEED, 0)
                     case pygame.K_UP:
-                        pacman_vel = (0, -PLAYER_SPEED)
+                        pacman_vel = (0, -PACMAN_SPEED)
                     case pygame.K_DOWN:
-                        pacman_vel = (0, PLAYER_SPEED)
+                        pacman_vel = (0, PACMAN_SPEED)
                 if pacman_connection:
                     pacman_connection.transmit_direction(pacman_vel)
             if event.type == pygame.QUIT:
@@ -124,16 +127,18 @@ def start():
                 pacman_pos.y = pygame.math.clamp(pacman_pos.y + pacman_vel[1], 0, board.INITIAL_BOARD_H)
                 # pacman_pos = pygame.Vector2(pygame.mouse.get_pos())
                 ghost_pos.move_towards_ip(pacman_pos, GHOST_SPEED)
-
-            
         
-        for cell in flat_grid:
+        for cell in board.flat_grid:
             if cell.is_filled:
                 pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
+            if cell.collidepoint(pacman_pos):
+                pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1) # Border
+            if cell.collidepoint(ghost_pos):
+                pygame.draw.rect(unit_screen, GHOST_COLOR, cell.rect, width=1) # Border
 
-        pygame.draw.circle(unit_screen, "yellow", pacman_pos, ROBOT_RADIUS)
+        pygame.draw.circle(unit_screen, PACMAN_COLOR, pacman_pos, ROBOT_RADIUS)
         
         # Need to copy to avoid "set changed size during iteration" error
         for pellet in pellets.copy():
@@ -142,7 +147,7 @@ def start():
                 score += 1
             pygame.draw.circle(unit_screen, "yellow", pellet, PELLET_RADIUS)
 
-        pygame.draw.circle(unit_screen, "red", ghost_pos, ROBOT_RADIUS)
+        pygame.draw.circle(unit_screen, GHOST_COLOR, ghost_pos, ROBOT_RADIUS)
 
         if len(pellets) == 0:
             state = 'YOU WON!'

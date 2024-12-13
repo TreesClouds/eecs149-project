@@ -8,6 +8,6 @@ if args.wireless:
     GHOST_PORT = '/dev/ttyUSB1'
     from wireless import Connection
     gui.pacman_connection = Connection(PACMAN_PORT)
-    gui.pacman_connection = Connection(GHOST_PORT)
+    gui.ghost_connection = Connection(GHOST_PORT)
 
 gui.start()

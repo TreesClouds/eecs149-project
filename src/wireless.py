@@ -29,7 +29,7 @@ class Connection:
         if args.debug:
             self.log(f'Attempting to transmit byte {buffer}')
         try:
-            self.serial.write(direction)
+            self.serial.write(buffer)
             if args.debug:
                 self.log(f"Transmitted byte {buffer}")
         except Exception as e:
