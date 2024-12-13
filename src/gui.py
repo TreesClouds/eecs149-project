@@ -15,10 +15,10 @@ FONT_SIZE = 20
 
 # Prefer low speeds but high frame rates for high collision detection precision,
 # which minimizes the risk of clipping through walls
-PACMAN_SPEED = 2.0
+PACMAN_SPEED = 1
 PACMAN_COLOR = 'yellow'
 
-GHOST_SPEED = 1.0 # In px/frame
+GHOST_SPEED = 0.9 # In px/frame
 GHOST_COLOR = 'red'
 
 MAX_FRAME_RATE = 120
