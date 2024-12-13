@@ -1,7 +1,6 @@
-from cli import args
 import pygame
 
-WALL_THICKNESS_INCHES = 2 if args.debug else 0.125
+WALL_THICKNESS_INCHES = 0.125 # 2 to make the borders more obvious
 CORRIDOR_DIST_INCHES = 5.78125
 INITIAL_PX_PER_INCH = 20
 
