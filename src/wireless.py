@@ -14,6 +14,16 @@ class Connection:
     def log(self, value):
         print(f'[{self.port}] {value}')
 
+    def transmit_byte(self, buffer: bytes):
+        if args.debug:
+            self.log(f'Attempting to transmit byte(s) {buffer}')
+        try:
+            self.serial.write(buffer)
+            if args.debug:
+                self.log(f"Transmitted byte(s) {buffer}")
+        except Exception as e:
+            self.log(f"Transmission failed: {e}")
+
     def transmit_direction(self, direction: tuple[int, int]):
         if direction[0] < 0:
             buffer = b'l'
@@ -25,37 +35,13 @@ class Connection:
             buffer = b'd'
         else:
             raise TypeError(f'Invalid direction {direction}')
-
-        if args.debug:
-            self.log(f'Attempting to transmit byte {buffer}')
-        try:
-            self.serial.write(buffer)
-            if args.debug:
-                self.log(f"Transmitted byte {buffer}")
-        except Exception as e:
-            self.log(f"Transmission failed: {e}")
+        self.transmit_byte(buffer)
     
     def start_game(self):
-        buffer = b's'
-        if args.debug:
-            self.log(f'Attempting to transmit byte {buffer}')
-        try:
-            self.serial.write(buffer)
-            if args.debug:
-                self.log(f"Transmitted byte {buffer}")
-        except Exception as e:
-            self.log(f"Transmission failed: {e}")
+        self.transmit_byte(b's')
 
     def quit_game(self):
-        buffer = b'q'
-        if args.debug:
-            self.log(f'Attempting to transmit byte {buffer}')
-        try:
-            self.serial.write(buffer)
-            if args.debug:
-                self.log(f"Transmitted byte {buffer}")
-        except Exception as e:
-            self.log(f"Transmission failed: {e}")
+        self.transmit_byte(b'q')
 
     def close(self):
         self.log('Disconnecting...')

@@ -8,11 +8,14 @@ INITIAL_WALL_THICKNESS = WALL_THICKNESS_INCHES * INITIAL_PX_PER_INCH
 INITIAL_CORRIDOR_DIST = CORRIDOR_DIST_INCHES * INITIAL_PX_PER_INCH
 
 class Cell:
-    def __init__(self, is_filled: bool, left: float, top: float, width: float, height: float):
-        # rect: (x, y, w, h)
+    def __init__(
+            self,
+            is_filled: bool, is_space: bool,
+            left: float, top: float, width: float, height: float):
         self.is_filled = is_filled
+        self.is_space = is_space
         self.rect = pygame.Rect(left, top, width, height)
-    
+
     def collidepoint(self, point: pygame.Vector2):
         return self.rect.collidepoint(point)
         
@@ -26,13 +29,15 @@ with open(BOARD_PATH, 'r') as f:
     for r, row in enumerate(rows):
         new_grid_row = []
         x = 0
-        h = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[r % 2]
+        is_big_h = r % 2
+        h = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[is_big_h]
         board_h += h
         for c, char in enumerate(row.strip()):
-            w = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[c % 2]
+            is_big_w = c % 2
+            w = (INITIAL_WALL_THICKNESS, INITIAL_CORRIDOR_DIST)[is_big_w]
             if r == 0:
                 board_w += w
-            new_cell = Cell(char != ' ', x, y, w, h)
+            new_cell = Cell(char != ' ', is_big_h and is_big_w, x, y, w, h)
             new_grid_row.append(new_cell)
             flat_grid.append(new_cell)
             x += w
@@ -42,19 +47,7 @@ INITIAL_BOARD_W, INITIAL_BOARD_H = board_w, board_h
 INITIAL_BOARD_SIZE = (INITIAL_BOARD_W, INITIAL_BOARD_H)
 ASPECT_RATIO = INITIAL_BOARD_W / INITIAL_BOARD_H
 
-INITIAL_PELLETS = {}
-rowCount = 0
-for i in range(len(grid)):
-    if i % 2 == 1:
-        colCount = 0
-        for j in range(len(grid[i])):
-            if j % 2 == 1:
-                cell = grid[i][j]
-                pR = cell.rect[0] + (cell.rect[2]/2)
-                pC = cell.rect[1] + (cell.rect[3]/2)
-                INITIAL_PELLETS[(colCount, rowCount)] = (pR, pC)
-                colCount += 1
-        rowCount += 1
+INITIAL_PELLETS = [cell.rect.center for cell in flat_grid if cell.is_space]
 
 def point_to_cell(point: pygame.Vector2) -> Cell:
     for cell in flat_grid:
