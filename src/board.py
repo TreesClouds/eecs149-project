@@ -59,27 +59,20 @@ with open(BOARD_PATH, 'r') as f:
         y += h
 INITIAL_BOARD_W, INITIAL_BOARD_H = board_w, board_h
 INITIAL_BOARD_SIZE = (INITIAL_BOARD_W, INITIAL_BOARD_H)
+BOUNDING_BOX = pygame.Rect((0, 0), INITIAL_BOARD_SIZE)
 ASPECT_RATIO = INITIAL_BOARD_W / INITIAL_BOARD_H
 
 INITIAL_PELLETS = [cell.rect.center for cell in flat_grid if cell.is_space]
 
-def point_pixels_to_cell(point: pygame.Vector2) -> Cell:
+def point_to_cell(point: pygame.Vector2) -> Cell:
+    if not BOUNDING_BOX.collidepoint(point):
+        raise IndexError(f'Point ({point}) out of bounds')
+    min_dist, nearest_cell = float('inf'), None
     for cell in flat_grid:
-        if cell.collidepoint(point):
-            return cell
-    raise IndexError(f'Point ({point}) out of bounds')
-
-def bounding_box_to_cell(rect: pygame.Rect) -> Cell:
-    '''Returns the cell with the largest overlap with `rect`.'''
-    max_area, max_cell = 0, None
-    for cell in flat_grid:
-        new_area = cell.collision_area(rect)
-        if new_area > max_area:
-            max_area, max_cell = new_area, cell
-    if max_cell == None:
-        raise IndexError(f'Bounding box ({rect}) out of bounds')
-    else:
-        return max_cell
+        new_dist = point.distance_to(cell.rect.center)
+        if new_dist < min_dist:
+            min_dist, nearest_cell = new_dist, cell
+    return nearest_cell
 
 def check_visitable(r: int, c: int) -> bool:
     return 0 <= r < len(grid) and 0 <= c < len(grid[0]) and not grid[r][c].is_filled
@@ -89,7 +82,3 @@ def check_valid_bounding_box(rect: pygame.Rect) -> bool:
         if cell.colliderect(rect) and cell.is_filled:
             return False
     return rect.clip((0, 0), INITIAL_BOARD_SIZE) == rect
-
-def point_fraction_to_cell(x_fraction, y_fraction) -> Cell:
-    return point_pixels_to_cell(
-        (x_fraction * INITIAL_BOARD_W, y_fraction * INITIAL_BOARD_H))

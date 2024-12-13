@@ -57,7 +57,7 @@ class Robot:
     
     @property
     def indices(self):
-        return board.bounding_box_to_cell(self.rect).indices
+        return board.point_to_cell(pygame.Vector2(self.rect.center)).indices
 
     @property
     def vel(self):
