@@ -4,8 +4,8 @@ from cli import args
 import gui
 
 if args.wireless:
-    PACMAN_PORT = '/dev/ttyUSB0'
-    GHOST_PORT = '/dev/ttyUSB1'
+    PACMAN_PORT = '/dev/ttyUSB2'
+    GHOST_PORT = '/dev/ttyUSB3'
     from wireless import Connection
     gui.pacman_connection = Connection(PACMAN_PORT)
     gui.ghost_connection = Connection(GHOST_PORT)

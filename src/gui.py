@@ -30,6 +30,10 @@ FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 clock = pygame.time.Clock()
 
 def start():
+
+    pacman_grid_loc = (0, 0)
+    ghost_grid_loc = (7, 3)
+    
     pellets = list(board.INITIAL_PELLETS.values()).copy()
     score = 0
     state = 'RUNNING'
@@ -64,6 +68,12 @@ def start():
                         pacman_vel = (0, -PACMAN_SPEED)
                     case pygame.K_DOWN:
                         pacman_vel = (0, PACMAN_SPEED)
+                    case pygame.K_s:
+                        pacman_connection.start_game()
+                        ghost_connection.start_game()
+                    case pygame.K_q:
+                        pacman_connection.quit_game()
+                        ghost_connection.quit_game()
                 if pacman_connection:
                     pacman_connection.transmit_direction(pacman_vel)
             if event.type == pygame.QUIT:
@@ -86,8 +96,6 @@ def start():
             pygame.draw.rect(unit_screen, 'red', (0, 0, board_w, board_h), width=1) # Usable bounding box
 
         # Updates pacman/ghost coordinates
-        pacman_grid_loc = ()
-        ghost_grid_loc = ()
         if state == 'RUNNING':
             if args.camera:
                 coordinates = cam.get_coordinates()
@@ -107,11 +115,12 @@ def start():
                     queue = [(ghost_grid_loc, [])]
                     visited = set()
                     visited.add(ghost_grid_loc)
-                    
+                    print("CURRENT GHOST: ", ghost_grid_loc)
                     while queue:
                         current_pos, path = queue.pop(0)
-                        
-                        if current_pos == pacman_pos:
+                        print(current_pos)
+                        print(pacman_grid_loc)
+                        if current_pos == pacman_grid_loc:
                             print("Direction Sent: ", path[0])
                             ghost_connection.transmit_direction(path[0])
                             break
