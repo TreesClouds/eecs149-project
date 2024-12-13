@@ -15,7 +15,7 @@ FONT_SIZE = 20
 
 # Prefer low speeds but high frame rates for high collision detection precision,
 # which minimizes the risk of clipping through walls
-PACMAN_SPEED = 5.0
+PACMAN_SPEED = 2.0
 PACMAN_COLOR = 'yellow'
 
 GHOST_SPEED = 1.0 # In px/frame
@@ -36,25 +36,20 @@ DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 pygame.init()
 FONT = pygame.font.Font(FONT_FAMILY_PATH, FONT_SIZE)
 clock = pygame.time.Clock()
-PACMAN_START_VEL = pygame.Vector2(PACMAN_SPEED, 0)
+INITIAL_DIR = pygame.Vector2(1, 0)
 ROBOT_WIDTH_HEIGHT = pygame.Vector2(ROBOT_DIAMETER, ROBOT_DIAMETER)
 
 screen = pygame.display.set_mode(board.INITIAL_BOARD_SIZE, pygame.RESIZABLE) # Screen user actually sees
 unit_screen = screen.copy() # Internal fixed-size screen that makes math simpler
 
 class Robot:
-    def __init__(self, color):
+    def __init__(self, color, speed):
         self.color = color
         self.pos = pygame.Vector2(0, 0)
-        self.vel = pygame.Vector2(0, 0)
+        self.speed = speed
+        self.dir = INITIAL_DIR.copy()
         self.connection = None
     
-    def move(self):
-        saved_pos = self.pos.copy()
-        self.pos += self.vel
-        if not board.check_valid_bounding_box(self.rect):
-            self.pos = saved_pos
-
     @property
     def rect(self):
         top_left = self.pos - ROBOT_WIDTH_HEIGHT / 2
@@ -63,12 +58,31 @@ class Robot:
     @property
     def indices(self):
         return board.bounding_box_to_cell(self.rect).indices
+
+    @property
+    def vel(self):
+        assert self.dir.magnitude() != 0, 'No direction set'
+        self.dir.scale_to_length(self.speed)
+        return self.dir
+
+    @property
+    def can_move(self):
+        saved_pos = self.pos.copy()
+        self.pos += self.vel
+        res = board.check_valid_bounding_box(self.rect)
+        self.pos = saved_pos
+        return res
     
+    def move(self):
+        if self.can_move:
+            self.pos += self.vel
+
     def draw(self):
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
 
-pacman, ghost = Robot(PACMAN_COLOR), Robot(GHOST_COLOR)
+pacman = Robot(PACMAN_COLOR, PACMAN_SPEED)
+ghost = Robot(GHOST_COLOR, GHOST_SPEED)
 
 def start():
     global pellets, score, state, pacman, ghost, screen, unit_screen
@@ -79,9 +93,10 @@ def start():
         pellets = board.INITIAL_PELLETS.copy()
         score = 0
         state = State.PAUSED
-        pacman.vel = PACMAN_START_VEL.copy()
         pacman.pos.update(board_w / 2, board_h / 8)
+        pacman.dir.update(INITIAL_DIR.copy())
         ghost.pos.update(board_w / 8, board_h / 8)
+        ghost.dir.update(INITIAL_DIR.copy())
     reset_game()
     
     def start_game():
@@ -121,13 +136,13 @@ def start():
             if event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_LEFT:
-                        pacman.vel.update(-PACMAN_SPEED, 0)
+                        pacman.dir.update(-1, 0)
                     case pygame.K_RIGHT:
-                        pacman.vel.update(PACMAN_SPEED, 0)
+                        pacman.dir.update(1, 0)
                     case pygame.K_UP:
-                        pacman.vel.update(0, -PACMAN_SPEED)
+                        pacman.dir.update(0, -1)
                     case pygame.K_DOWN:
-                        pacman.vel.update(0, PACMAN_SPEED)
+                        pacman.dir.update(0, 1)
                     case pygame.K_r:
                         if state != State.PAUSED:
                             reset_game()
@@ -138,7 +153,7 @@ def start():
                         if state == State.RUNNING:
                             lose_game()
                 if pacman.connection:
-                    pacman.connection.transmit_direction(pacman.vel)
+                    pacman.connection.transmit_direction(pacman.dir)
             if event.type == pygame.QUIT:
                 quit_game()
                 exit()
@@ -187,9 +202,7 @@ def start():
                 for i, (dc, dr) in enumerate(DIRECTIONS):
                     new_r, new_c = current_indices[0] + dr, current_indices[1] + dc
                     new_indices = (new_r, new_c)
-                    if (new_indices not in visited and
-                        0 <= new_r < len(board.grid) and 0 < new_c < len(board.grid[0]) and
-                        not board.grid[new_r][new_c].is_filled):
+                    if new_indices not in visited and board.check_visitable(new_r, new_c):
                         visited.add(new_indices)
                         queue.append((new_indices, path + [DIRECTIONS[i]]))
 
@@ -197,14 +210,17 @@ def start():
             for cell in board.flat_grid:
                 cell.on_path = False
             r, c = ghost.indices
-            for dir in shortest_path:
+            for i, dir in enumerate(shortest_path):
                 board.grid[r][c].on_path = True
                 c += dir[0]
                 r += dir[1]
+                if i == 0:
+                    # (r, c) are the next indices
+                    recenter_dir = board.grid[r][c].rect.center - ghost.pos
             next_dir = shortest_path[0]
+            ghost.dir.update(next_dir if ghost.can_move else recenter_dir)
             if args.wireless:
                 ghost.connection.transmit_direction(next_dir)
-            ghost.vel.update(pygame.Vector2(next_dir) * GHOST_SPEED)
 
         for cell in board.flat_grid:
             if cell.is_filled:
