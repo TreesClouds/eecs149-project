@@ -23,7 +23,9 @@ PACMAN_COLOR = 'yellow'
 
 GHOST_INITIAL_POS = board.grid[-2][-2].center_vec # bottom-right empty cell
 GHOST_SPEED = 0.9 # In px/frame
-GHOST_COLOR = 'red'
+GHOST_COLOR = 'cyan'
+
+WALL_COLOR = 'cyan'
 
 INITIAL_DIR = pygame.Vector2(1, 0)
 
@@ -253,7 +255,7 @@ def start():
 
         for cell in board.flat_grid:
             if cell.is_filled:
-                pygame.draw.rect(unit_screen, 'blue', cell.rect) # Actual cell
+                pygame.draw.rect(unit_screen, WALL_COLOR, cell.rect) # Actual cell
             if args.debug:
                 pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
             if state == State.RUNNING:
