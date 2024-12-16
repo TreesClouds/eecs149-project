@@ -23,7 +23,7 @@ PACMAN_COLOR = 'yellow'
 
 GHOST_INITIAL_POS = board.grid[-2][-2].center_vec # bottom-right empty cell
 GHOST_SPEED = 0.9 # In px/frame
-GHOST_COLOR = 'cyan'
+GHOST_COLOR = 'pink'
 
 WALL_COLOR = 'cyan'
 
@@ -236,29 +236,28 @@ def start():
 
             # Mark all cells on path
             board.reset()
-            r, c = ghost.indices
-            for i, dir in enumerate(shortest_path):
-                board.grid[r][c].on_path = True
-                c += dir[0]
-                r += dir[1]
-            ghost.dir.update(shortest_path[0])
-            # If the ghost can't move, it's stuck on a corner.
-            # So move orthogonal to the desired BFS direction (still 2 directions)
-            # Which direction? The one that points closer to the center of the current cell.
-            if not ghost.can_move:
-                recenter_dir = ghost.cell.center_vec - ghost.pos
-                if ghost.dir.x != 0:
-                    ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
-                else:
-                    ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
-            ghost.transmit()
+            if len(shortest_path):
+                r, c = ghost.indices
+                for i, dir in enumerate(shortest_path):
+                    board.grid[r][c].on_path = True
+                    c += dir[0]
+                    r += dir[1]
+                ghost.dir.update(shortest_path[0])
+                # If the ghost can't move, it's stuck on a corner.
+                # So move orthogonal to the desired BFS direction (still 2 directions)
+                # Which direction? The one that points closer to the center of the current cell.
+                if not ghost.can_move:
+                    recenter_dir = ghost.cell.center_vec - ghost.pos
+                    if ghost.dir.x != 0:
+                        ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
+                    else:
+                        ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
+                ghost.transmit()
 
         for cell in board.flat_grid:
             if cell.is_filled:
                 pygame.draw.rect(unit_screen, WALL_COLOR, cell.rect) # Actual cell
             if args.debug:
-                pygame.draw.rect(unit_screen, 'green', cell.rect, width=1) # Border
-            if state == State.RUNNING:
                 if cell.indices == pacman.indices:
                     pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1)
                 if cell.on_path:
