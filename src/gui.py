@@ -6,7 +6,7 @@ from enum import Enum
 pygame.init()
 
 class State(Enum):
-    PAUSED = 'PAUSED'
+    IDLE = 'PAUSED'
     RUNNING = 'RUNNING'
     WON = 'YOU WON!'
     LOST = 'GAME OVER'
@@ -154,7 +154,7 @@ def start():
         global pellets, score, state, pacman, ghost
         pellets = board.INITIAL_PELLETS.copy()
         score = 0
-        state = State.PAUSED
+        state = State.IDLE
         pacman.reset()
         ghost.reset()
         board.reset()
@@ -190,7 +190,7 @@ def start():
         # poll for events
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if state == State.PAUSED:
+                if state == State.IDLE:
                     if event.key == pygame.K_s:
                         start_game()
                 else:
@@ -303,7 +303,7 @@ def start():
 
         draw_centered_text(f'SCORE: {score}', (board.INITIAL_BOARD_W / 2, FONT_SIZE))
         match state:
-            case State.PAUSED:
+            case State.IDLE:
                 draw_centered_text('PRESS S TO START', (board.INITIAL_BOARD_W / 2, board.INITIAL_BOARD_H * 0.45))
                 draw_centered_text('(PRESS Q TO QUIT DURING GAME)', (board.INITIAL_BOARD_W / 2, board.INITIAL_BOARD_H * 0.55))
             case State.WON | State.LOST:
