@@ -73,6 +73,8 @@ class Robot:
     def reset(self):
         self.pos = self.initial_pos
         self.dir = INITIAL_DIR.copy()
+        self.target_dir = INITIAL_DIR.copy()
+        self.target_indices = None
     
     @property
     def safe_rect(self):
@@ -89,10 +91,11 @@ class Robot:
     
     @property
     def letter(self):
-        letter = DIR_TO_LETTER[tuple(self.dir)]
-        if letter == None:
-            raise TypeError(f'Direction {self.dir} is not an orthogonal unit vector or (0, 0)')
-        return letter
+        return DIR_TO_LETTER[tuple(self.dir)]
+    
+    @property
+    def target_letter(self):
+        return DIR_TO_LETTER[tuple(self.target_dir)]
 
     @property
     def vel(self):
@@ -107,17 +110,39 @@ class Robot:
         return res
     
     def move(self):
+        # Smart turning: If you can't move in your target direction, you're stuck on a corner.
+        # So first move orthogonal to the desired direction (leaving 2 possible directions)
+        # Which direction? The one that points closer to the center of the current cell.
+        if self.target_indices:
+            self.dir.update(self.target_dir)
+            if not self.can_move:
+                recenter_dir = self.cell.center_vec - self.pos
+                if self.dir.x != 0:
+                    self.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
+                else:
+                    self.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
         if self.can_move:
             self.pos += self.vel
+        if self.indices == self.target_indices:
+            self.target_indices = None
+        if self.connection:
+            self.connection.transmit_letter(self.letter)
+
+    def smart_turn(self, target_dir: pygame.Vector2):
+        self.dir.update(target_dir)
+        target_r = self.indices[0] + round(target_dir.y)
+        target_c = self.indices[1] + round(target_dir.x)
+        if board.check_visitable(target_r, target_c):
+            self.target_dir = target_dir
+            self.target_indices = (target_r, target_c)
+        else:
+            self.target_indices = None
 
     def draw(self):
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
-        draw_centered_text(self.letter, self.pos, 'black')
-    
-    def transmit(self):
-        if self.connection:
-            self.connection.transmit_letter(self.letter)
+        text = self.letter + '/' + self.target_letter
+        draw_centered_text(text, self.pos, 'black')
 
 pacman = Robot(board.grid[1][1].center_vec, PACMAN_SPEED, PACMAN_COLOR)
 ghost = Robot(board.grid[-2][-2].center_vec, GHOST_SPEED, GHOST_COLOR)
@@ -173,16 +198,15 @@ def start():
                     if state == State.RUNNING:
                         match event.key:
                             case pygame.K_LEFT:
-                                pacman.dir.update(-1, 0)
+                                pacman.smart_turn(pygame.Vector2(-1, 0))
                             case pygame.K_RIGHT:
-                                pacman.dir.update(1, 0)
+                                pacman.smart_turn(pygame.Vector2(1, 0))
                             case pygame.K_UP:
-                                pacman.dir.update(0, -1)
+                                pacman.smart_turn(pygame.Vector2(0, -1))
                             case pygame.K_DOWN:
-                                pacman.dir.update(0, 1)
+                                pacman.smart_turn(pygame.Vector2(0, 1))
                             case pygame.K_q:
                                 lose_game()
-                        pacman.transmit()
                     if event.key == pygame.K_r:
                         reset_game()
             if event.type == pygame.QUIT:
@@ -242,17 +266,18 @@ def start():
                     board.grid[r][c].on_path = True
                     c += dir[0]
                     r += dir[1]
-                ghost.dir.update(shortest_path[0])
-                # If the ghost can't move, it's stuck on a corner.
-                # So move orthogonal to the desired BFS direction (still 2 directions)
-                # Which direction? The one that points closer to the center of the current cell.
-                if not ghost.can_move:
-                    recenter_dir = ghost.cell.center_vec - ghost.pos
-                    if ghost.dir.x != 0:
-                        ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
-                    else:
-                        ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
-                ghost.transmit()
+                ghost.smart_turn(pygame.Vector2(shortest_path[0]))
+                # ghost.dir.update(shortest_path[0])
+                # # If the ghost can't move, it's stuck on a corner.
+                # # So move orthogonal to the desired BFS direction (still 2 directions)
+                # # Which direction? The one that points closer to the center of the current cell.
+                # if not ghost.can_move:
+                #     recenter_dir = ghost.cell.center_vec - ghost.pos
+                #     if ghost.dir.x != 0:
+                #         ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
+                #     else:
+                #         ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
+                # ghost.transmit()
 
         for cell in board.flat_grid:
             if cell.is_filled:
