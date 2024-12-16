@@ -61,4 +61,4 @@ To integrate additional hardware, add the respective flag(s).
 1. Add the `--debug` or `-d` flag as a CLI argument.
 
 ## Gameplay
-Use the arrow keys to move Pac-Man.
+Use the arrow keys to move Pac-Man. **Note:** Walls are hidden outside of debug mode, making the game unplayable looking only at the screen. This is to hide misalignment of walls in the projected board.

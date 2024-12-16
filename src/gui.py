@@ -277,11 +277,10 @@ def start():
                 #     else:
                 #         ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
                 # ghost.transmit()
-
-        for cell in board.flat_grid:
-            if cell.is_filled:
-                pygame.draw.rect(unit_screen, WALL_COLOR, cell.rect) # Actual cell
-            if args.debug:
+        if args.debug:
+            for cell in board.flat_grid:
+                if cell.is_filled:
+                    pygame.draw.rect(unit_screen, WALL_COLOR, cell.rect) # Actual cell
                 if cell.indices == pacman.indices:
                     pygame.draw.rect(unit_screen, PACMAN_COLOR, cell.rect, width=1)
                 if cell.on_path:
