@@ -123,6 +123,9 @@ class Robot:
                     self.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
         if self.can_move:
             self.pos += self.vel
+        else:
+            self.dir.update()
+            self.target_dir.update()
         if self.indices == self.target_indices:
             self.target_indices = None
         if self.connection:
@@ -167,7 +170,7 @@ def start():
             pacman.connection.start_game()
             ghost.connection.start_game()
     
-    def quit_game():
+    def end_game():
         if args.wireless:
             pacman.connection.quit_game()
             ghost.connection.quit_game()
@@ -175,12 +178,12 @@ def start():
     def win_game():
         global state
         state = State.WON
-        quit_game()
+        end_game()
 
     def lose_game():
         global state
         state = State.LOST
-        quit_game()
+        end_game()
 
     if args.camera:
         from camera import Camera
@@ -209,7 +212,7 @@ def start():
                     if event.key == pygame.K_r:
                         reset_game()
             if event.type == pygame.QUIT:
-                quit_game()
+                end_game()
                 exit()
             if event.type == pygame.VIDEORESIZE:
                 board_w, board_h = event.w, event.h
@@ -266,17 +269,6 @@ def start():
                     c += dir[0]
                     r += dir[1]
                 ghost.smart_turn(pygame.Vector2(shortest_path[0]))
-                # ghost.dir.update(shortest_path[0])
-                # # If the ghost can't move, it's stuck on a corner.
-                # # So move orthogonal to the desired BFS direction (still 2 directions)
-                # # Which direction? The one that points closer to the center of the current cell.
-                # if not ghost.can_move:
-                #     recenter_dir = ghost.cell.center_vec - ghost.pos
-                #     if ghost.dir.x != 0:
-                #         ghost.dir.update(0, (-1 if recenter_dir.y < 0 else 1))
-                #     else:
-                #         ghost.dir.update((-1 if recenter_dir.x < 0 else 1), 0)
-                # ghost.transmit()
         if args.debug:
             for cell in board.flat_grid:
                 if cell.is_filled:
