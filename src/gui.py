@@ -141,8 +141,7 @@ class Robot:
     def draw(self):
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
-        text = self.letter + '/' + self.target_letter
-        draw_centered_text(text, self.pos, 'black')
+        draw_centered_text(self.letter + '/' + self.target_letter, self.pos, 'black')
 
 pacman = Robot(board.grid[1][1].center_vec, PACMAN_SPEED, PACMAN_COLOR)
 ghost = Robot(board.grid[-2][-2].center_vec, GHOST_SPEED, GHOST_COLOR)
