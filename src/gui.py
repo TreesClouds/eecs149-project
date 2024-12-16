@@ -36,7 +36,7 @@ ROBOT_DIAMETER_INCHES = 3.875
 ROBOT_DIAMETER = ROBOT_DIAMETER_INCHES * board.INITIAL_PX_PER_INCH
 ROBOT_RADIUS = ROBOT_DIAMETER / 2
 
-ROBOT_SAFE_DIAMETER = ROBOT_DIAMETER * 1.2
+ROBOT_SAFE_DIAMETER = board.INITIAL_CORRIDOR_DIST - 2
 ROBOT_SAFE_RADIUS = ROBOT_SAFE_DIAMETER / 2
 ROBOT_SAFE_WIDTH_HEIGHT = pygame.Vector2(ROBOT_SAFE_DIAMETER, ROBOT_SAFE_DIAMETER)
 
@@ -145,7 +145,10 @@ class Robot:
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
         if args.debug:
             pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
-            draw_centered_text(self.letter + '/' + self.target_letter, self.pos, 'black')
+            center_text = self.letter
+            if self.target_indices:
+                center_text += '/' + self.target_letter
+            draw_centered_text(center_text, self.pos, 'black')
 
 pacman = Robot(board.grid[1][1].center_vec, PACMAN_SPEED, PACMAN_COLOR)
 ghost = Robot(board.grid[-2][-2].center_vec, GHOST_SPEED, GHOST_COLOR)
