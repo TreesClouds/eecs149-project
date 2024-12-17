@@ -74,7 +74,7 @@ def point_to_cell(point: pygame.Vector2) -> Cell:
     '''If `point` is strictly inside any cell, returns that cell.
     Otherwise, returns the cell with center closest to this point.'''
     if not BOUNDING_BOX.collidepoint(point):
-        raise IndexError(f'Point ({point}) out of bounds')
+        print(f'WARNING: point_to_cell call with point ({point}) out of bounds')
     min_dist, nearest_cell = float('inf'), None
     for cell in flat_grid:
         if cell.collidepoint(point):
