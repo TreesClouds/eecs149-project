@@ -235,13 +235,15 @@ def start():
             if cli.camera:
                 coordinates = cam.get_coordinates()
             
-            if cli.args.pacman and coordinates[0] != -1 and coordinates[1] != -1:
-                pacman.pos.update(coordinates[0], coordinates[1])
+            if cli.args.pacman:
+                if coordinates[0] != -1 and coordinates[1] != -1:
+                    pacman.pos.update(coordinates[0], coordinates[1])
             else:
                 pacman.move()
 
-            if cli.args.ghost and coordinates[2] != -1 and coordinates[3] != -1:
-                ghost.pos.update(coordinates[2], coordinates[3])
+            if cli.args.ghost:
+                if coordinates[2] != -1 and coordinates[3] != -1:
+                    ghost.pos.update(coordinates[2], coordinates[3])
             else:
                 ghost.move()
 
