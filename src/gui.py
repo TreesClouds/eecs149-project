@@ -1,7 +1,8 @@
-from cli import args
+import cli
 import pygame
 import board
 from enum import Enum
+from wireless import Connection
 
 pygame.init()
 
@@ -68,7 +69,7 @@ class Robot:
         self.speed = speed
         self.color = color
         self.reset()
-        self.connection = None
+        self.connection = Connection()
     
     def reset(self):
         self.pos = self.initial_pos
@@ -128,8 +129,7 @@ class Robot:
             self.target_dir.update()
         if self.indices == self.target_indices:
             self.target_indices = None
-        if self.connection:
-            self.connection.transmit_letter(self.letter)
+        self.connection.transmit_letter(self.letter)
 
     def smart_turn(self, target_dir: pygame.Vector2):
         self.dir.update(target_dir)
@@ -143,7 +143,7 @@ class Robot:
 
     def draw(self):
         pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_RADIUS)
-        if args.debug:
+        if cli.args.debug:
             pygame.draw.circle(unit_screen, self.color, self.pos, ROBOT_SAFE_RADIUS, width=1)
             center_text = self.letter
             if self.target_indices:
@@ -170,14 +170,12 @@ def start():
     def start_game():
         global state
         state = State.RUNNING
-        if args.wireless:
-            pacman.connection.start_game()
-            ghost.connection.start_game()
+        pacman.connection.start_game()
+        ghost.connection.start_game()
     
     def end_game():
-        if args.wireless:
-            pacman.connection.quit_game()
-            ghost.connection.quit_game()
+        pacman.connection.quit_game()
+        ghost.connection.quit_game()
 
     def win_game():
         global state
@@ -189,7 +187,7 @@ def start():
         state = State.LOST
         end_game()
 
-    if args.camera:
+    if cli.camera:
         from camera import Camera
         cam = Camera()
 
@@ -229,21 +227,22 @@ def start():
 
         unit_screen.fill('black') # Background color
 
-        if args.debug:
+        if cli.args.debug:
             pygame.draw.rect(unit_screen, 'red', (0, 0, board_w, board_h), width=1) # Usable bounding box
 
         # Updates pacman/ghost coordinates
         if state == State.RUNNING:
-            if args.camera:
+            if cli.camera:
                 coordinates = cam.get_coordinates()
-
-                if coordinates[0] != -1 and coordinates[1] != -1: # If valid position detected update coordinates
-                    pacman.pos.update(coordinates[0], coordinates[1])
-
-                if coordinates[2] != -1 and coordinates[3] != -1:
-                    ghost.pos.update(coordinates[2], coordinates[3])
+            
+            if cli.args.pacman and coordinates[0] != -1 and coordinates[1] != -1:
+                pacman.pos.update(coordinates[0], coordinates[1])
             else:
                 pacman.move()
+
+            if cli.args.ghost and coordinates[2] != -1 and coordinates[3] != -1:
+                ghost.pos.update(coordinates[2], coordinates[3])
+            else:
                 ghost.move()
 
             # Conduct BFS for Ghost's next move
@@ -273,7 +272,7 @@ def start():
                     c += dir[0]
                     r += dir[1]
                 ghost.smart_turn(pygame.Vector2(shortest_path[0]))
-        if args.debug:
+        if cli.args.debug:
             for cell in board.flat_grid:
                 if cell.is_filled:
                     pygame.draw.rect(unit_screen, WALL_COLOR, cell.rect) # Actual cell

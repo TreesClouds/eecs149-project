@@ -42,16 +42,22 @@ To only use the GUI (no integrated hardware), just run the driver script `main.p
 
 To integrate additional hardware, add the respective flag(s).
 
-## Integrating Wireless
-1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
-2. You may need to give yourself permissions to use the device:
-
-       sudo chmod a+rw /dev/ttyUSB0
-3. Add the `--wireless` or `-w` flag as a CLI argument.
-
 ## Integrating Camera
 1. Connect the webcam to your computer via USB cable. TODO add more instructions for selecting the device?
-2. Add the `--camera` or `-c` flag as a CLI argument.
+2. Add one or both of these flags on the CLI:
+	1. Pac-Man: `--pacman` or `-p`
+	2. Ghost: `--ghost` or `-g`
+
+## Integrating Wireless
+1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
+2. You may need to give yourself permissions to use the device(s) (this example is for port 0):
+
+       sudo chmod a+rw /dev/ttyUSB0
+3. Add one or both of these flags on the CLI:
+	1. Pac-Man: `--Pacman=<pacman port>` or `-P=<pacman port>`
+	2. Ghost: `--Ghost=<ghost port>` or `-G=<ghost port>`
+
+Default ports you should use if using ports 0 and 1 for projector and camera: `/dev/ttyUSB2` (Pac-Man), `/dev/ttyUSB3` (Ghost)
 
 ## Integrating Projector
 1. Connect a Pico LED projector to your computer via USB cable.
