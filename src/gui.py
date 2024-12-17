@@ -129,7 +129,6 @@ class Robot:
             self.target_dir.update()
         if self.indices == self.target_indices:
             self.target_indices = None
-        self.connection.transmit_letter(self.letter)
 
     def smart_turn(self, target_dir: pygame.Vector2):
         self.dir.update(target_dir)
@@ -240,12 +239,14 @@ def start():
                     pacman.pos.update(coordinates[0], coordinates[1])
             else:
                 pacman.move()
+            pacman.connection.transmit_letter(pacman.letter)
 
             if cli.args.ghost:
                 if coordinates[2] != -1 and coordinates[3] != -1:
                     ghost.pos.update(coordinates[2], coordinates[3])
             else:
                 ghost.move()
+            ghost.connection.transmit_letter(ghost.letter)
 
             # Conduct BFS for Ghost's next move
             shortest_path = [] # from ghost to pacman
