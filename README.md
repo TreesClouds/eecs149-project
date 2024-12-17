@@ -49,7 +49,7 @@ To integrate additional hardware, add the respective flag(s).
 	2. Ghost: `--ghost` or `-g`
 
 ## Integrating Wireless
-1. Connect the master BT module to your computer via USB cable and select the device. Check that it shows up as `/dev/ttyUSB0` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
+1. Connect the master BT module(s) to your computer via USB cable and select the device(s). Check that it shows up as something like `/dev/ttyUSB0` or `/dev/ttyUSB3` with `ls /dev/ttyUSB*`. If not, you may need to hold the USB cable there.
 2. You may need to give yourself permissions to use the device(s) (this example is for port 0):
 
        sudo chmod a+rw /dev/ttyUSB0
@@ -57,14 +57,23 @@ To integrate additional hardware, add the respective flag(s).
 	1. Pac-Man: `--Pacman=<pacman port>` or `-P=<pacman port>`
 	2. Ghost: `--Ghost=<ghost port>` or `-G=<ghost port>`
 
-Default ports you should use if using ports 0 and 1 for projector and camera: `/dev/ttyUSB2` (Pac-Man), `/dev/ttyUSB3` (Ghost)
-
 ## Integrating Projector
 1. Connect a Pico LED projector to your computer via USB cable.
 2. When running the GUI, it's highly recommended to go fullscreen to maximize the projector size.
 
 ## Debug Mode
 1. Add the `--debug` or `-d` flag as a CLI argument.
+
+## Integrating All Hardware Types
+These assume you're using USB ports 0 and 1 for the projector and camera:
+- Integrating Pac-Man only:
+	```
+	python3 src/main.py -p -P=/dev/ttyUSB2
+	```
+- Integrating both:
+	```
+	python3 src/main.py -pg -P=/dev/ttyUSB2 -G=/dev/ttyUSB3
+	```
 
 ## Gameplay
 Use the arrow keys to move Pac-Man. **Note:** Walls are hidden outside of debug mode, making the game unplayable looking only at the screen. This is to hide misalignment of walls in the projected board.
